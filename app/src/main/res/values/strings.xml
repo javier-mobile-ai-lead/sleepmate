@@ -1,0 +1,96 @@
+<resources>
+    <string name="app_name">SleepMate</string>
+    
+    <!-- Sleep Habits Screen -->
+    <string name="sleep_habits_title">Hábitos de Sueño</string>
+    <string name="sleep_habits_subtitle">Crea y mantén hábitos para mejorar tu descanso</string>
+    <string name="add_habit">Agregar Hábito</string>
+    <string name="no_habits_message">No tienes hábitos aún</string>
+    <string name="no_habits_description">Agrega hábitos saludables para mejorar tu rutina de sueño</string>
+    
+    <!-- Add Habit Bottom Sheet -->
+    <string name="add_habit_title">Nuevo Hábito</string>
+    <string name="suggested_habits">Hábitos Sugeridos</string>
+    <string name="custom_habit">Hábito Personalizado</string>
+    <string name="habit_title_label">Título del hábito</string>
+    <string name="habit_title_hint">Ej: Leer antes de dormir</string>
+    <string name="habit_subtitle_label">Descripción (opcional)</string>
+    <string name="habit_subtitle_hint">Ej: 15 minutos de lectura</string>
+    <string name="save_habit">Guardar Hábito</string>
+    <string name="cancel">Cancelar</string>
+    
+    <!-- Suggested Habits -->
+    <string name="suggested_habit_meditation">Meditación nocturna</string>
+    <string name="suggested_habit_meditation_desc">5-10 minutos de meditación</string>
+    <string name="suggested_habit_reading">Lectura relajante</string>
+    <string name="suggested_habit_reading_desc">15-20 minutos sin pantallas</string>
+    <string name="suggested_habit_tea">Té de manzanilla</string>
+    <string name="suggested_habit_tea_desc">Una taza caliente antes de dormir</string>
+    <string name="suggested_habit_shower">Ducha tibia</string>
+    <string name="suggested_habit_shower_desc">Relajar el cuerpo y la mente</string>
+    <string name="suggested_habit_journal">Diario de gratitud</string>
+    <string name="suggested_habit_journal_desc">Escribir 3 cosas positivas del día</string>
+    <string name="suggested_habit_stretch">Estiramientos</string>
+    <string name="suggested_habit_stretch_desc">5 minutos de yoga suave</string>
+    
+    <!-- Error Messages -->
+    <string name="error_empty_title">El título no puede estar vacío</string>
+    <string name="error_title_too_long">El título es demasiado largo</string>
+    <string name="error_subtitle_too_long">La descripción es demasiado larga</string>
+    <string name="error_save_habit">Error al guardar el hábito</string>
+    <string name="error_delete_habit">Error al eliminar el hábito</string>
+    <string name="error_load_habits">Error al cargar los hábitos</string>
+    
+    <!-- Actions -->
+    <string name="mark_completed">Marcar como completado</string>
+    <string name="mark_incomplete">Marcar como incompleto</string>
+    <string name="delete_habit">Eliminar hábito</string>
+    <string name="edit_habit">Editar hábito</string>
+    <string name="habit_completed">¡Hábito completado!</string>
+    <string name="habit_uncompleted">Hábito marcado como incompleto</string>
+    
+    <!-- Confirmation -->
+    <string name="delete_habit_confirmation">¿Estás seguro de que quieres eliminar este hábito?</string>
+    <string name="delete">Eliminar</string>
+    <string name="keep">Mantener</string>
+    
+    <!-- Video Recommendations -->
+    <string name="video_recommendations_title">Videos Recomendados</string>
+    <string name="video_recommendations_subtitle">Videos relajantes para mejorar tu descanso</string>
+    <string name="add_to_favorites">Agregar a favoritos</string>
+    <string name="remove_from_favorites">Quitar de favoritos</string>
+    <string name="video_not_available">Este video no está disponible</string>
+    <string name="no_videos_available">No hay videos disponibles</string>
+    <string name="no_videos_description">Verifica tu conexión e intenta nuevamente</string>
+    <string name="connection_error_title">Error de Conexión</string>
+    <string name="connection_error_message">No pudimos cargar los videos. Verifica tu conexión.</string>
+    <string name="retry">Reintentar</string>
+    <string name="refresh_videos">Actualizar videos</string>
+    <string name="loading_videos">Cargando videos...</string>
+    <string name="favorite_added">Agregado a favoritos</string>
+    <string name="favorite_removed">Quitado de favoritos</string>
+    
+    <!-- AI Help Screen -->
+    <string name="ai_help_title">Consulta sobre Sueño</string>
+    <string name="ai_help_subtitle">Pregunta a nuestro asistente especializado</string>
+    <string name="ai_chat_hint">Escribe tu consulta sobre sueño...</string>
+    <string name="send_message">Enviar</string>
+    <string name="clear_chat">Borrar historial</string>
+    <string name="ai_thinking">SleepMate está pensando...</string>
+    <string name="daily_usage_blocked">Consulta diaria utilizada</string>
+    <string name="daily_usage_message">Ya realizaste tu consulta diaria. Vuelve mañana para hacer una nueva pregunta.</string>
+    <string name="usage_completed_message">Consulta completada. Vuelve mañana para hacer una nueva pregunta.</string>
+    <string name="empty_message_error">Por favor escribe tu consulta</string>
+    <string name="network_error">Error de conexión. Verifica tu internet.</string>
+    <string name="ai_service_error">Servicio temporalmente no disponible</string>
+    <string name="general_error">Error inesperado. Intenta más tarde.</string>
+    <string name="close">Cerrar</string>
+    <string name="you">Tú</string>
+    <string name="sleepmate_ai">SleepMate</string>
+    <string name="no_messages_yet">¡Haz tu primera consulta!</string>
+    <string name="no_messages_description">Pregunta sobre técnicas de relajación, rutinas de sueño, o cualquier tema relacionado con el descanso.</string>
+    <string name="clear_confirmation_title">Borrar historial</string>
+    <string name="clear_confirmation_message">¿Estás seguro de que quieres borrar todo el historial de conversación?</string>
+    <string name="clear">Borrar</string>
+    <string name="usage_check_error">Error al verificar el uso diario</string>
+</resources>

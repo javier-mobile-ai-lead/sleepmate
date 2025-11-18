@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "253364680149",
+    "project_id": "sleepmate-327dc",
+    "storage_bucket": "sleepmate-327dc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:253364680149:android:3f417429dc712f4a04f95c",
+        "android_client_info": {
+          "package_name": "com.sleepmate.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8UhRop8yC-65WG-qYPDqf8ix0l_HR9v8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
