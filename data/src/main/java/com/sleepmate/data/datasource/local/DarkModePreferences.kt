@@ -1,0 +1,33 @@
+package com.sleepmate.data.datasource.local
+
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.preferencesDataStore
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class DarkModePreferences @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
+    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("dark_mode_preferences")
+    
+    private val DARK_MODE_KEY = booleanPreferencesKey("dark_mode_enabled")
+    
+    val isDarkModeEnabled: Flow<Boolean?> = context.dataStore.data
+        .map { preferences ->
+            preferences[DARK_MODE_KEY]
+        }
+    
+    suspend fun setDarkModeEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DARK_MODE_KEY] = enabled
+        }
+    }
+}
