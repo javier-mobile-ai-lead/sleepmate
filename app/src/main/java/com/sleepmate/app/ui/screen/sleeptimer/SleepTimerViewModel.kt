@@ -1,7 +1,9 @@
 package com.sleepmate.app.ui.screen.sleeptimer
 
+import android.content.ComponentName
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sleepmate.app.service.DeviceAdminManager
 import com.sleepmate.app.service.DoNotDisturbManager
 import com.sleepmate.app.service.SleepNotificationService
 import com.sleepmate.app.service.SleepTimerAlarmManager
@@ -17,7 +19,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.Duration
@@ -30,8 +31,11 @@ data class SleepTimerUiState(
     val progress: Float = 0f,
     val sleepModeActivated: Boolean = false,
     val hasNotificationPolicyAccess: Boolean = false,
+    val isDeviceAdminEnabled: Boolean = false,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val selectedDurationMinutes: Int = 25,
+
 )
 
 @HiltViewModel
@@ -39,15 +43,24 @@ class SleepTimerViewModel @Inject constructor(
     private val sleepTimerRepository: SleepTimerRepository,
     private val sleepTimerAlarmManager: SleepTimerAlarmManager,
     private val doNotDisturbManager: DoNotDisturbManager,
-    private val sleepNotificationService: SleepNotificationService
+    private val sleepNotificationService: SleepNotificationService,
+    private val deviceAdminManager: DeviceAdminManager
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(SleepTimerUiState())
     val uiState: StateFlow<SleepTimerUiState> = _uiState.asStateFlow()
+
+    val adminComponentName: ComponentName
+        get() = deviceAdminManager.adminComponent
     
     init {
         observeTimerState()
+        checkInitialPermissions()
+    }
+
+    private fun checkInitialPermissions() {
         checkNotificationPolicyAccess()
+        checkDeviceAdminStatus() 
     }
 
     private fun observeTimerState() {
@@ -56,10 +69,10 @@ class SleepTimerViewModel @Inject constructor(
                 combine(
                     sleepTimerRepository.getSleepTimer(),
                     sleepTimerRepository.getSleepModeState(),
-                    tickerFlow(1_000) // ⏱️ tick cada segundo
+                    tickerFlow(1_000)
                 ) { sleepTimer, sleepModeState, _ ->
                     updateUiState(sleepTimer, sleepModeState)
-                }.collect() // no uses stateIn aquí, solo collect
+                }.collect()
             } catch (e: Exception) {
                 Timber.e(e, "Error observing timer state")
                 _uiState.value = _uiState.value.copy(
@@ -80,7 +93,7 @@ class SleepTimerViewModel @Inject constructor(
         val timeRemaining = if (sleepTimer.isActive && sleepTimer.endTime != null) {
             calculateTimeRemaining(sleepTimer.endTime!!)
         } else {
-            "25:00"
+            String.format("%02d:00", _uiState.value.selectedDurationMinutes)
         }
         
         val progress = if (sleepTimer.isActive && sleepTimer.startTime != null && sleepTimer.endTime != null) {
@@ -128,13 +141,9 @@ class SleepTimerViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                
-                // Start the sleep timer in repository (data management)
-                sleepTimerRepository.setSleepTimerActive(true, 25)
-                
-                // Start the system alarm (Android-specific)
-                sleepTimerAlarmManager.startSleepTimer(25)
-                
+                val durationMinutes = _uiState.value.selectedDurationMinutes
+                sleepTimerRepository.setSleepTimerActive(true, durationMinutes)
+                sleepTimerAlarmManager.startSleepTimer(durationMinutes)
                 Timber.d("Sleep timer started successfully")
                 
             } catch (e: Exception) {
@@ -151,16 +160,9 @@ class SleepTimerViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                
-                // Cancel timer in repository (data management)
                 sleepTimerRepository.setSleepTimerActive(false)
-                
-                // Cancel the system alarm (Android-specific)
                 sleepTimerAlarmManager.cancelSleepTimer()
-                
-                // Cancel any existing notification
                 sleepNotificationService.cancelSleepNotification()
-                
                 Timber.d("Sleep timer cancelled successfully")
                 
             } catch (e: Exception) {
@@ -184,6 +186,10 @@ class SleepTimerViewModel @Inject constructor(
             }
         }
     }
+
+    fun checkDeviceAdminStatus() {
+        _uiState.value = _uiState.value.copy(isDeviceAdminEnabled = deviceAdminManager.isDeviceAdminActive())
+    }
     
     fun openNotificationPolicySettings() {
         viewModelScope.launch {
@@ -201,5 +207,14 @@ class SleepTimerViewModel @Inject constructor(
     
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    fun onDurationChange(newDurationMinutes: Int) {
+        if (!_uiState.value.isTimerActive) {
+            _uiState.value = _uiState.value.copy(
+                selectedDurationMinutes = newDurationMinutes,
+                timeRemaining = String.format("%02d:00", newDurationMinutes)
+            )
+        }
     }
 }

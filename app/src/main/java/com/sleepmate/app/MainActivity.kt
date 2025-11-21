@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
@@ -22,12 +23,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            val isDarkTheme by mainViewModel.isDarkTheme.collectAsState()
+            // 1. Read the nullable theme setting from the ViewModel
+            val isDarkThemeSetting by mainViewModel.isDarkTheme.collectAsState()
+
+            // 2. Decide which theme to use
+            val useDarkTheme = isDarkThemeSetting ?: isSystemInDarkTheme()
+            
             CompositionLocalProvider(
-                LocalDarkTheme provides isDarkTheme,
+                // Provide the final calculated theme value
+                LocalDarkTheme provides useDarkTheme,
+                // This remains the same, it just sets the preference for the future
                 LocalSetDarkTheme provides { enabled -> mainViewModel.setDarkTheme(enabled) }
             ) {
-                SleepMateTheme(darkTheme = isDarkTheme) {
+                 // 3. Apply the final theme to the whole app
+                SleepMateTheme(darkTheme = useDarkTheme) {
                     SleepMateNavigation()
                 }
             }
@@ -35,5 +44,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// The Local still holds a non-nullable Boolean, as the final decision is always true or false.
 val LocalDarkTheme = compositionLocalOf { false }
 val LocalSetDarkTheme = compositionLocalOf<(Boolean) -> Unit> { {} }

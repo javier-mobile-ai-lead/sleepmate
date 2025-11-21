@@ -39,11 +39,25 @@
 
         <!-- BroadcastReceiver for sleep timer alarms -->
         <receiver
-            android:name="com.sleepmate.data.service.SleepTimerReceiver"
+            android:name="com.sleepmate.app.service.SleepTimerReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.sleepmate.app.SLEEP_TIMER_FINISHED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Device Admin Receiver -->
+        <receiver
+            android:name=".service.DeviceAdminReceiver"
+            android:description="@string/app_name"
+            android:exported="true"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_policies" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
         </receiver>
         

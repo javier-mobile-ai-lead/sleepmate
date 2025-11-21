@@ -23,13 +23,10 @@ import com.sleepmate.app.ui.screen.videorecommendations.VideoRecommendationsScre
 fun SleepMateNavigation(
     navController: NavHostController = rememberNavController()
 ) {
-    Scaffold(
-        modifier = Modifier.fillMaxSize()
-    ) { paddingValues ->
+
         NavHost(
             navController = navController,
             startDestination = Screen.Home.route,
-            modifier = Modifier.padding(paddingValues)
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(
@@ -89,7 +86,7 @@ fun SleepMateNavigation(
             
             composable(Screen.Progress.route) {
             ProgressScreen(
-                    modifier = Modifier.fillMaxSize()
+                onNavigateBack = {navController.popBackStack()}
                 )
             }
             
@@ -101,5 +98,4 @@ fun SleepMateNavigation(
                 )
             }
         }
-    }
 }

@@ -1,5 +1,6 @@
 package com.sleepmate.app.ui.screen.settings
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.sleepmate.app.LocalDarkTheme
 import com.sleepmate.app.LocalSetDarkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,9 +41,10 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val isDarkTheme = LocalDarkTheme.current
     val setDarkTheme = LocalSetDarkTheme.current
-    
+
+    val useDarkTheme = uiState.isDarkModeEnabled ?: isSystemInDarkTheme()
+
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
             when (event) {
@@ -56,7 +57,7 @@ fun SettingsScreen(
             }
         }
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -83,19 +84,19 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             SettingsCard(
                 title = "Modo Oscuro",
                 description = "Cambia entre temas claro y oscuro",
-                isChecked = uiState.isDarkModeEnabled,
+                isChecked = useDarkTheme,
                 onCheckedChange = {
-                    setDarkTheme.invoke(true)
+                    setDarkTheme(it)
                     viewModel.onDarkModeToggled(it)
                 }
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             SettingsCard(
                 title = "Notificaciones Push",
                 description = "Recibe recordatorios y consejos para dormir",
@@ -160,9 +161,9 @@ fun SettingsCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Switch(
                 checked = isChecked,
                 onCheckedChange = onCheckedChange

@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
@@ -28,10 +30,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sleepmate.app.ui.theme.*
 import com.sleepmate.domain.model.DailySleepProgress
 import java.time.LocalDate
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgressScreen(
-    modifier: Modifier = Modifier,
-    viewModel: ProgressViewModel = hiltViewModel()
+    viewModel: ProgressViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit
+
 ) {
     val currentStreak by viewModel.currentStreak.collectAsStateWithLifecycle()
     val progressByDay by viewModel.progressByDay.collectAsStateWithLifecycle()
@@ -39,48 +43,70 @@ fun ProgressScreen(
     
     val weekSummary = viewModel.getWeekSummary()
     val weekDates = viewModel.getCurrentWeekDates()
-    
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        // Header
-        Text(
-            text = "Mi Progreso",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        
-        // Streak Card
-        StreakCard(streak = currentStreak)
-        
-        // Weekly Progress
-        WeeklyProgressCard(
-            weekDates = weekDates,
-            progressByDay = progressByDay,
-            viewModel = viewModel
-        )
-        
-        // Weekly Summary
-        WeeklySummaryCard(summary = weekSummary)
-        
-        // Daily Recommendation
-        RecommendationCard()
-        
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    // Header
+                    Text(
+                        text = "Mi Progreso",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = {onNavigateBack()}) {
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Atras")
+
+                    }
+                }
+            )
+
+
+
+        }
+    ) {paddingValues ->
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                CircularProgressIndicator()
+
+
+                // Streak Card
+                StreakCard(streak = currentStreak)
+
+                // Weekly Progress
+                WeeklyProgressCard(
+                    weekDates = weekDates,
+                    progressByDay = progressByDay,
+                    viewModel = viewModel
+                )
+
+                // Weekly Summary
+                WeeklySummaryCard(summary = weekSummary)
+
+                // Daily Recommendation
+                RecommendationCard()
+
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
         }
-    }
+
 }
 
 @Composable

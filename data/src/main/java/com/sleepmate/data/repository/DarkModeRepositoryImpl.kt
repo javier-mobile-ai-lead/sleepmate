@@ -11,7 +11,7 @@ class DarkModeRepositoryImpl @Inject constructor(
     private val darkModePreferences: DarkModePreferences
 ) : DarkModeRepository {
     
-    override fun isDarkModeEnabled(): Flow<Boolean> {
+    override fun isDarkModeEnabled(): Flow<Boolean?> {
         return darkModePreferences.isDarkModeEnabled
     }
     

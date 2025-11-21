@@ -26,6 +26,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -55,6 +56,18 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToProgress: () -> Unit
 ) {
+
+
+    Scaffold()
+    { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+
+
     val composition by rememberLottieComposition(
         LottieCompositionSpec.Asset("lt_moon_stars.lottie")
     )
@@ -62,129 +75,134 @@ fun HomeScreen(
         composition = composition,
         iterations = LottieConstants.IterateForever
     )
-    Row(modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End) {
-        LottieAnimation(
-            composition = composition,
-            progress = { progress },
-            modifier = Modifier
-                .size(100.dp)
-                .fillMaxWidth()
-        )
-    }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .padding(top = 64.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "SleepMate",
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onBackground // ✅ adaptable
-        )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                LottieAnimation(
+                    composition = composition,
+                    progress = { progress },
+                    modifier = Modifier
+                        .size(100.dp)
+                        .fillMaxWidth()
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .padding(top = 64.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "Your personal sleep companion",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant // ✅ adaptable
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Column(
-            modifier = Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-
-
-            HomeCard(
-                title = "Sleep Timer",
-                description = "Set relaxing sounds to help you sleep",
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary // ✅ usa el tema
-                    )
-                },
-                onClick = onNavigateToSleepTimer
-            )
-
-            HomeCard(
-                title = "Sleep Habits",
-                description = "Track and improve your sleep routine",
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                },
-                    onClick = onNavigateToHabits
+                Text(
+                    text = "SleepMate",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onBackground // ✅ adaptable
                 )
 
-                HomeCard(
-                    title = "Progress",
-                    description = "View your sleep progress and streaks",
-                    icon = {
-                        Icon(
-                        imageVector = Icons.Default.Build,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                },
-                onClick = onNavigateToProgress
-            )
+                Text(
+                    text = "Your personal sleep companion",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant // ✅ adaptable
+                )
 
-            HomeCard(
-                title = "Video Recommendations",
-                description = "Relaxing videos for better sleep",
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                },
-                onClick = onNavigateToVideos
-            )
+                Spacer(modifier = Modifier.height(16.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
 
-            HomeCard(
-                title = "AI Sleep Help",
-                description = "Get personalized sleep advice",
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                },
-                onClick = onNavigateToAIHelp
-            )
 
-            HomeCard(
-                title = "Settings",
-                description = "Customize your app experience",
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                    HomeCard(
+                        title = "Sleep Timer",
+                        description = "Set relaxing sounds to help you sleep",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary // ✅ usa el tema
+                            )
+                        },
+                        onClick = onNavigateToSleepTimer
                     )
-                },
-                onClick = onNavigateToSettings
-            )
+
+                    HomeCard(
+                        title = "Sleep Habits",
+                        description = "Track and improve your sleep routine",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        onClick = onNavigateToHabits
+                    )
+
+                    HomeCard(
+                        title = "Progress",
+                        description = "View your sleep progress and streaks",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Build,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        onClick = onNavigateToProgress
+                    )
+
+                    HomeCard(
+                        title = "Video Recommendations",
+                        description = "Relaxing videos for better sleep",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        onClick = onNavigateToVideos
+                    )
+
+                    HomeCard(
+                        title = "AI Sleep Help",
+                        description = "Get personalized sleep advice",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        onClick = onNavigateToAIHelp
+                    )
+
+                    HomeCard(
+                        title = "Settings",
+                        description = "Customize your app experience",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        onClick = onNavigateToSettings
+                    )
+                }
+            }
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
