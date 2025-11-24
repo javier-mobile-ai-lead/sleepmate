@@ -1,27 +1,22 @@
 package com.sleepmate.app.service
 
+import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.sleepmate.domain.repository.SleepTimerRepository
+import com.sleepmate.app.service.DeviceAdminManager
+import com.sleepmate.app.service.DoNotDisturbManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import timber.log.Timber
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class SleepTimerReceiver : BroadcastReceiver() {
 
     @Inject
-    lateinit var sleepTimerRepository: SleepTimerRepository
-
-    @Inject
-    lateinit var notificationService: SleepNotificationService
+    lateinit var sleepTimerManager: SleepTimerManager
 
     @Inject
     lateinit var doNotDisturbManager: DoNotDisturbManager
@@ -29,47 +24,35 @@ class SleepTimerReceiver : BroadcastReceiver() {
     @Inject
     lateinit var deviceAdminManager: DeviceAdminManager
 
-    // Create a coroutine scope for async operations
-    private val receiverScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (context == null || intent?.action != SleepTimerAlarmManager.ACTION_SLEEP_TIMER_FINISHED) {
+        if (context == null || intent?.action != SleepTimerManager.ACTION_SLEEP_TIMER_FINISHED) {
             return
         }
 
-        Timber.d("Sleep timer finished, processing sleep mode activation")
-
-        // Use goAsync() to allow asynchronous operations
         val pendingResult = goAsync()
 
-        receiverScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
-                // 1. Save sleep mode state to repository
-                val finishTimestamp = LocalDateTime.now()
-                    .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                // 1. First, stop the timer and the foreground service.
+                // This will clear the ongoing notification.
+                sleepTimerManager.cancelTimer()
 
-                sleepTimerRepository.setSleepModeActivated(
-                    isActivated = true,
-                    finishTimestamp = finishTimestamp
-                )
-
-                // 2. Update timer state to inactive
-                sleepTimerRepository.setSleepTimerActive(false)
-
-                // 3. Send sleep notification
-                notificationService.sendSleepNotification()
-
-                // 4. Activate Do Not Disturb mode
+                // 2. Perform the final actions
                 doNotDisturbManager.activateDoNotDisturb()
-
-                // 5. Lock the screen
                 deviceAdminManager.lockScreen()
 
-                Timber.d("Sleep mode successfully activated at $finishTimestamp")
+                // 3. Finally, post a NEW, final notification that is not tied to the service.
+                val finalNotification = SleepTimerService.createNotification(
+                    context,
+                    "El temporizador se completó. ¡Dulces sueños 🌙!", //"The Do Not Disturb mode has been activated.",
+                    isOngoing = false
+                )
+                val notificationManager =
+                    context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.notify(SleepTimerService.NOTIFICATION_ID, finalNotification)
 
-            } catch (e: Exception) {
-                Timber.e(e, "Error processing sleep timer completion")
             } finally {
+                // The main work is done, just finish the broadcast receiver.
                 pendingResult.finish()
             }
         }

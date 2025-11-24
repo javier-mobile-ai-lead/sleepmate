@@ -1,10 +1,7 @@
 package com.sleepmate.app.ui.navigation
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -16,86 +13,96 @@ import com.sleepmate.app.ui.screen.home.HomeScreen
 import com.sleepmate.app.ui.screen.progress.ProgressScreen
 import com.sleepmate.app.ui.screen.settings.SettingsScreen
 import com.sleepmate.app.ui.screen.sleeptimer.SleepTimerScreen
-import com.sleepmate.app.ui.screen.splash.SplashScreen
 import com.sleepmate.app.ui.screen.videorecommendations.VideoRecommendationsScreen
 
 @Composable
 fun SleepMateNavigation(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    // Accept the destination route from MainActivity
+    destinationRoute: String?
 ) {
 
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Home.route,
-        ) {
-            composable(Screen.Home.route) {
-                HomeScreen(
-                    onNavigateToSleepTimer = {
-                        navController.navigate(Screen.SleepTimer.route)
-                    },
-                    onNavigateToHabits = {
-                        navController.navigate(Screen.Habits.route)
-                    },
-                    onNavigateToVideos = {
-                        navController.navigate(Screen.VideoRecommendations.route)
-                    },
-                    onNavigateToAIHelp = {
-                        navController.navigate(Screen.AIHelp.route)
-                    },
-                    onNavigateToSettings = {
-                        navController.navigate(Screen.Settings.route)
-                    },
-                    onNavigateToProgress = {
-                        navController.navigate(Screen.Progress.route)
-                    }
-                )
-            }
-            
-            composable(Screen.SleepTimer.route) {
-                SleepTimerScreen(
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-            
-            composable(Screen.Habits.route) {
-                HabitsScreen(
-                    viewModel = hiltViewModel(),
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-            
-            composable(Screen.VideoRecommendations.route) {
-                VideoRecommendationsScreen(
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-            
-            composable(Screen.AIHelp.route) {
-                AIHelpScreen(
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-            
-            composable(Screen.Progress.route) {
-            ProgressScreen(
-                onNavigateBack = {navController.popBackStack()}
-                )
-            }
-            
-            composable(Screen.Settings.route) {
-                SettingsScreen(
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
-                )
-            }
+    // This effect runs once when the destinationRoute has a value.
+    // If the user opens the app normally, it does nothing.
+    // If opened from the notification, it navigates to the correct screen.
+    LaunchedEffect(destinationRoute) {
+        if (destinationRoute == "sleep_timer_screen") {
+            navController.navigate(Screen.SleepTimer.route)
         }
+    }
+
+    NavHost(
+        navController = navController,
+        startDestination = Screen.Home.route,
+    ) {
+        composable(Screen.Home.route) {
+            HomeScreen(
+                onNavigateToSleepTimer = {
+                    navController.navigate(Screen.SleepTimer.route)
+                },
+                onNavigateToHabits = {
+                    navController.navigate(Screen.Habits.route)
+                },
+                onNavigateToVideos = {
+                    navController.navigate(Screen.VideoRecommendations.route)
+                },
+                onNavigateToAIHelp = {
+                    navController.navigate(Screen.AIHelp.route)
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Screen.Settings.route)
+                },
+                onNavigateToProgress = {
+                    navController.navigate(Screen.Progress.route)
+                }
+            )
+        }
+
+        composable(Screen.SleepTimer.route) {
+            SleepTimerScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.Habits.route) {
+            HabitsScreen(
+                viewModel = hiltViewModel(),
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.VideoRecommendations.route) {
+            VideoRecommendationsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.AIHelp.route) {
+            AIHelpScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.Progress.route) {
+            ProgressScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Settings.route) {
+            SettingsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+    }
 }

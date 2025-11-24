@@ -22,13 +22,16 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
+        // Get the destination route from the intent that started the activity
+        val destinationRoute = intent.getStringExtra("destination_route")
+
         setContent {
             // 1. Read the nullable theme setting from the ViewModel
             val isDarkThemeSetting by mainViewModel.isDarkTheme.collectAsState()
 
             // 2. Decide which theme to use
             val useDarkTheme = isDarkThemeSetting ?: isSystemInDarkTheme()
-            
+
             CompositionLocalProvider(
                 // Provide the final calculated theme value
                 LocalDarkTheme provides useDarkTheme,
@@ -37,7 +40,8 @@ class MainActivity : ComponentActivity() {
             ) {
                  // 3. Apply the final theme to the whole app
                 SleepMateTheme(darkTheme = useDarkTheme) {
-                    SleepMateNavigation()
+                    // Pass the destination route to your navigation composable
+                    SleepMateNavigation(destinationRoute = destinationRoute)
                 }
             }
         }

@@ -65,6 +65,7 @@
     <string name="connection_error_title">Error de Conexión</string>
     <string name="connection_error_message">No pudimos cargar los videos. Verifica tu conexión.</string>
     <string name="retry">Reintentar</string>
+    <string name="dismiss">Cerrar</string>
     <string name="refresh_videos">Actualizar videos</string>
     <string name="loading_videos">Cargando videos...</string>
     <string name="favorite_added">Agregado a favoritos</string>

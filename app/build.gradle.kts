@@ -66,6 +66,7 @@ dependencies {
     
     // ViewModels
     implementation(libs.lifecycle.viewmodel.compose)
+    implementation("androidx.lifecycle:lifecycle-service:2.9.2")
     
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)

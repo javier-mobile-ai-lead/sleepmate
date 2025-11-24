@@ -9,7 +9,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
     <!-- Permission for vibration (optional but recommended for notifications) -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
@@ -36,6 +37,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Service for managing the ongoing timer notification -->
+        <service
+            android:name=".service.SleepTimerService"
+            android:enabled="true"
+            android:exported="false" />
 
         <!-- BroadcastReceiver for sleep timer alarms -->
         <receiver

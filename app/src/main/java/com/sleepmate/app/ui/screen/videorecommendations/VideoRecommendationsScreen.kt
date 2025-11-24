@@ -9,7 +9,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -26,10 +25,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -48,7 +47,7 @@ fun VideoRecommendationsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val density = LocalDensity.current
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -70,7 +69,7 @@ fun VideoRecommendationsScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            Icons.Default.ArrowBack, 
+                            Icons.Default.ArrowBack,
                             contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onSurface
                         )
@@ -97,8 +96,8 @@ fun VideoRecommendationsScreen(
                             .padding(paddingValues)
                     )
                 }
-                
-                uiState.hasConnectionError && uiState.videos.isEmpty() -> {
+
+                uiState.error != null -> {
                     ErrorContent(
                         error = uiState.error ?: stringResource(R.string.connection_error_message),
                         onRetry = viewModel::retryLoadingVideos,
@@ -108,7 +107,7 @@ fun VideoRecommendationsScreen(
                             .padding(paddingValues)
                     )
                 }
-                
+
                 uiState.videos.isEmpty() -> {
                     EmptyStateContent(
                         onRetry = viewModel::retryLoadingVideos,
@@ -117,13 +116,12 @@ fun VideoRecommendationsScreen(
                             .padding(paddingValues)
                     )
                 }
-                
+
                 else -> {
                     VideosList(
                         videos = uiState.videos,
                         favoriteVideoIds = uiState.favoriteVideoIds,
                         onToggleFavorite = viewModel::toggleFavorite,
-                        isVideoFavorite = viewModel::isVideoFavorite,
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(paddingValues)
@@ -139,67 +137,56 @@ private fun VideosList(
     videos: List<VideoItem>,
     favoriteVideoIds: Set<String>,
     onToggleFavorite: (String) -> Unit,
-    isVideoFavorite: (VideoItem) -> Boolean,
     modifier: Modifier = Modifier
 ) {
     var isFullScreen by remember { mutableStateOf(false) }
     var currentFullscreenView by remember { mutableStateOf<View?>(null) }
     val context = LocalContext.current
     val activity = context as Activity
-    Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.SpaceBetween
+
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        videos.forEach { video ->
-                AnimatedVisibility(
-                    visible = true,
-                    enter = slideInVertically() + expandVertically() + fadeIn(),
-                    exit = slideOutVertically() + shrinkVertically() + fadeOut()
-                ) {
-                    VideoCard(
-                        modifier = Modifier.padding(16.dp),
-                        video = video,
-                        isFavorite = favoriteVideoIds.contains(video.id),
-                        onToggleFavorite = {
-                            onToggleFavorite(video.id)
-                        },
-                        isFullScreen = isFullScreen,
-                        onEnterFullscreen = { fullscreenView ->
-                            isFullScreen = true
-                            currentFullscreenView = fullscreenView
-                            (activity.findViewById(android.R.id.content) as ViewGroup).addView(
-                                fullscreenView
-                            )
-                            activity.requestedOrientation =
-                                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                            WindowCompat.setDecorFitsSystemWindows(activity.window, false)
-
-                            WindowCompat.getInsetsController(
-                                activity.window,
-                                activity?.window?.decorView!!
-                            )?.let { controller ->
-                                controller.hide(WindowInsetsCompat.Type.systemBars())
-                                controller.systemBarsBehavior =
-                                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                            }
-                        },
-                        onExitFullscreen = {
-                            isFullScreen = false
-                            currentFullscreenView?.let {
-                                (activity.findViewById(android.R.id.content) as ViewGroup).removeView(
-                                    it
-                                )
-                            }
-                            activity.requestedOrientation =
-                                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                        }
-                    )
+        items(
+            items = videos,
+            key = { it.id }
+        ) { video ->
+            VideoCard(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                video = video,
+                isFavorite = favoriteVideoIds.contains(video.id),
+                onToggleFavorite = {
+                    onToggleFavorite(video.id)
+                },
+                isFullScreen = isFullScreen,
+                onEnterFullscreen = { fullscreenView ->
+                    isFullScreen = true
+                    currentFullscreenView = fullscreenView
+                    (activity.findViewById(android.R.id.content) as ViewGroup).addView(fullscreenView)
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+                    WindowCompat.getInsetsController(activity.window, activity.window.decorView)?.let { controller ->
+                        controller.hide(WindowInsetsCompat.Type.systemBars())
+                        controller.systemBarsBehavior =
+                            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    }
+                },
+                onExitFullscreen = {
+                    isFullScreen = false
+                    currentFullscreenView?.let {
+                        (activity.findViewById(android.R.id.content) as ViewGroup).removeView(it)
+                    }
+                    currentFullscreenView = null
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    WindowCompat.setDecorFitsSystemWindows(activity.window, true)
+                    WindowCompat.getInsetsController(activity.window, activity.window.decorView)
+                        ?.show(WindowInsetsCompat.Type.systemBars())
                 }
-            }}
-        
-        Spacer(modifier = Modifier.height(16.dp))
-
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -215,14 +202,14 @@ private fun VideoCard(
 ) {
     val videoId = YouTubeUtils.extractVideoId(video.videoUrl)
     var showFavoriteMessage by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(showFavoriteMessage) {
         if (showFavoriteMessage) {
             delay(1500)
             showFavoriteMessage = false
         }
     }
-    
+
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
@@ -265,7 +252,7 @@ private fun VideoCard(
                         }
                     }
                 }
-                
+
                 // Favorite button overlay
                 Box(
                     modifier = Modifier
@@ -314,9 +301,9 @@ private fun VideoCard(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // Video info section
             Text(
                 text = video.title,
@@ -326,9 +313,9 @@ private fun VideoCard(
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            
+
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             Text(
                 text = video.description,
                 style = MaterialTheme.typography.bodyMedium,
@@ -338,13 +325,13 @@ private fun VideoCard(
             )
         }
     }
-    
+
     // Favorite feedback message
     if (showFavoriteMessage) {
         LaunchedEffect(Unit) {
             delay(100)
         }
-        
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -357,9 +344,9 @@ private fun VideoCard(
                 shadowElevation = 4.dp
             ) {
                 Text(
-                    text = if (isFavorite) 
+                    text = if (isFavorite)
                         stringResource(R.string.favorite_added)
-                    else 
+                    else
                         stringResource(R.string.favorite_removed),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                     color = MaterialTheme.colorScheme.onPrimary,
@@ -386,9 +373,9 @@ private fun LoadingContent(
                 modifier = Modifier.size(48.dp),
                 color = MaterialTheme.colorScheme.primary
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Text(
                 text = stringResource(R.string.loading_videos),
                 style = MaterialTheme.typography.bodyLarge,
@@ -424,7 +411,7 @@ private fun EmptyStateContent(
                 text = stringResource(R.string.no_videos_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -471,35 +458,23 @@ private fun ErrorContent(
                     color = MaterialTheme.colorScheme.onErrorContainer
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
                     text = error,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onErrorContainer,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onErrorContainer
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    ) {
-                        Text("Cerrar")
+                Row {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.dismiss))
                     }
-
-                    Button(
-                        onClick = onRetry,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(onClick = onRetry) {
                         Text(stringResource(R.string.retry))
                     }
                 }
