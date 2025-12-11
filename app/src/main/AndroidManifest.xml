@@ -10,6 +10,9 @@
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
     <!-- Permission for vibration (optional but recommended for notifications) -->
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -38,11 +41,27 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.screen.alarm.AlarmActivity"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true" />
+
         <!-- Service for managing the ongoing timer notification -->
         <service
             android:name=".service.SleepTimerService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".service.AlarmPlaybackService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
         <!-- BroadcastReceiver for sleep timer alarms -->
         <receiver
@@ -53,6 +72,12 @@
                 <action android:name="com.sleepmate.app.SLEEP_TIMER_FINISHED" />
             </intent-filter>
         </receiver>
+
+        <!-- BroadcastReceiver for wake up alarms -->
+        <receiver
+            android:name="com.sleepmate.app.service.WakeUpAlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
 
         <!-- Device Admin Receiver -->
         <receiver
@@ -67,7 +92,7 @@
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
         </receiver>
-        
+
     </application>
 
 </manifest>

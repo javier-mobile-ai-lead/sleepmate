@@ -1,8 +1,13 @@
 package com.sleepmate.data.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStoreFile
 import com.sleepmate.data.datasource.local.TrackerDataStoreImpl
 import com.sleepmate.data.repository.AIUsageRepositoryImpl
+import com.sleepmate.data.repository.AlarmRepositoryImpl
 import com.sleepmate.data.repository.DarkModeRepositoryImpl
 import com.sleepmate.data.repository.GPTRepositoryImpl
 import com.sleepmate.data.repository.NotificationPushRepositoryImpl
@@ -12,6 +17,7 @@ import com.sleepmate.data.repository.SleepTimerRepositoryImpl
 import com.sleepmate.data.repository.VideoRepositoryImpl
 import com.sleepmate.domain.datasource.TrackerDataSource
 import com.sleepmate.domain.repository.AIUsageRepository
+import com.sleepmate.domain.repository.AlarmRepository
 import com.sleepmate.domain.repository.DarkModeRepository
 import com.sleepmate.domain.repository.GPTRepository
 import com.sleepmate.domain.repository.NotificationPushRepository
@@ -84,6 +90,12 @@ abstract class DataModule {
     abstract fun bindTrackerDataSource(
         trackerDataStoreImpl: TrackerDataStoreImpl
     ): TrackerDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindAlarmRepository(
+        alarmRepositoryImpl: AlarmRepositoryImpl
+    ): AlarmRepository
 }
 
 @Module
@@ -94,5 +106,13 @@ object DataContextModule {
     @Singleton
     fun provideApplicationContext(@ApplicationContext context: Context): Context {
         return context
+    }
+
+    @Provides
+    @Singleton
+    fun provideAlarmDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
+        return PreferenceDataStoreFactory.create(
+            produceFile = { context.preferencesDataStoreFile("alarm_settings") }
+        )
     }
 }

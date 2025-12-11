@@ -91,7 +91,17 @@ dependencies {
     
     // DataStore
     implementation(libs.datastore.preferences)
-    
+
+    //new
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
+    implementation(libs.play.services.location)
+    implementation(libs.mlkit.text.recognition)
+
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

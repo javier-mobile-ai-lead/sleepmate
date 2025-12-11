@@ -12,6 +12,11 @@ val Secondary = Color(0xFFA1D9F9)     // Azul celeste tenue
 val BackgroundLight = Color(0xFFF4F6FA)  // Blanco azulado
 val BackgroundDark = Color(0xFF1A1C2E)   // Azul noche suave
 
+val CardBackgroundLight = Color(0xFFD4CDDB)  // Blanco azulado
+val CardBackgroundDark = Color(0xFF2A2D44)   // Azul noche suave
+
+
+
 // Texto
 val TextPrimaryLight = Color(0xFF1A1C2E)   // En fondo claro
 val TextPrimaryDark = Color(0xFFFFFFFF)   // En fondo oscuro

@@ -34,11 +34,11 @@ class VideoRemoteDataSource @Inject constructor(
                                 id = document.id,
                                 title = document.getString("title") ?: "",
                                 description = document.getString("description") ?: "",
-                                thumbnailUrl = document.getString("thumbnailUrl") ?: "",
-                                videoUrl = document.getString("videoUrl") ?: "",
+                                thumbnailUrl = document.getString("thumbnail_url") ?: "",
+                                videoUrl = document.getString("video_url") ?: "",
                                 duration = 3600,
                                 category = document.getString("category") ?: "",
-                                rating = document.getLong("rating")?.toFloat() ?: 1f,
+                                rating = document.getDouble("rating")?.toFloat() ?: 1f,
                             )
                         } catch (e: Exception) {
                             Timber.e(e, "Error parsing video document: ${document.id}")
@@ -73,7 +73,7 @@ class VideoRemoteDataSource @Inject constructor(
                         videoUrl = document.getString("video_url") ?: "",
                         duration = 3600,
                         category = document.getString("category") ?: "",
-                        rating = document.getLong("rating")?.toFloat() ?: 1f,
+                        rating = document.getDouble("rating")?.toFloat() ?: 1f,
                     )
                 } catch (e: Exception) {
                     Timber.e(e, "Error parsing video document: ${document.id}")

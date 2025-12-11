@@ -3,8 +3,10 @@ package com.sleepmate.app.ui.screen.sleeptimer
 import android.app.admin.DevicePolicyManager
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,10 +18,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -32,10 +38,13 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -49,6 +58,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -109,7 +119,7 @@ fun SleepTimerScreen(
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -138,14 +148,57 @@ fun SleepTimerScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        LazyColumn(
+
+        var selectedTab by remember { mutableStateOf(0) }
+
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
-        ) {item {
+        ) {
+
+
+            CustomSegmentedTabs(
+                selected = selectedTab,
+                onSelected = { selectedTab = it }
+            )
+
+            when (selectedTab) {
+                0 -> {
+                    SleepTimerTab(
+                        uiState = uiState,
+                        viewModel = viewModel,
+                        showPermissionDialog = showPermissionDialog,
+                        onPermissionDialogChange = { showPermissionDialog = it },
+                        adminPermissionLauncher = adminPermissionLauncher
+                    )
+                }
+
+                1 -> { SleepAlarmScreen()}
+            }
+        }
+    }
+}
+
+@Composable
+fun SleepTimerTab(
+    uiState: SleepTimerUiState,
+    viewModel: SleepTimerViewModel,
+    showPermissionDialog: Boolean,
+    onPermissionDialogChange: (Boolean) -> Unit,
+    adminPermissionLauncher: ActivityResultLauncher<Intent>
+) {
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        item {
             // Sleep Mode Status Card
             if (uiState.sleepModeActivated) {
                 Card(
@@ -260,9 +313,9 @@ fun SleepTimerScreen(
 
             Text(
                 text = when {
-                    uiState.isTimerActive -> "Temporizador activo por ${uiState.selectedDurationMinutes}" + if(uiState.selectedDurationMinutes == 1) " minuto" else " minutos"
+                    uiState.isTimerActive -> "Temporizador activo por ${uiState.selectedDurationMinutes}" + if (uiState.selectedDurationMinutes == 1) " minuto" else " minutos"
                     uiState.sleepModeActivated -> "El temporizador se completó. ¡Dulces sueños! 🌙"
-                    else -> "Presiona para activar el temporizador de ${uiState.selectedDurationMinutes}" + if(uiState.selectedDurationMinutes == 1) " minuto" else " minutos"
+                    else -> "Presiona para activar el temporizador de ${uiState.selectedDurationMinutes}" + if (uiState.selectedDurationMinutes == 1) " minuto" else " minutos"
                 },
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -278,7 +331,8 @@ fun SleepTimerScreen(
                     PermissionRequestCard(
                         title = "⚠️ Permiso de No Molestar",
                         text = "Para activar el modo No Molestar automáticamente, se necesita este permiso.",
-                        onClick = { showPermissionDialog = true }
+                        onClick = { onPermissionDialogChange(true) }
+
                     )
                 }
 
@@ -289,44 +343,42 @@ fun SleepTimerScreen(
                         title = "🔒 Permiso para Apagar Pantalla",
                         text = "Opcional: Otorga este permiso si deseas que la pantalla se apague sola al finalizar el temporizador.",
                         onClick = {
-                            val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-                                putExtra(
-                                    DevicePolicyManager.EXTRA_DEVICE_ADMIN,
-                                    viewModel.adminComponentName
-                                )
-                                putExtra(
-                                    DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                                    "Permite que la app bloquee la pantalla para la función de apagado automático."
-                                )
-                            }
+                            val intent =
+                                Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+                                    putExtra(
+                                        DevicePolicyManager.EXTRA_DEVICE_ADMIN,
+                                        viewModel.adminComponentName
+                                    )
+                                    putExtra(
+                                        DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                                        "Permite que la app bloquee la pantalla para la función de apagado automático."
+                                    )
+                                }
                             adminPermissionLauncher.launch(intent)
                         }
                     )
                 }
             }
         }
-        }
     }
-    
+
+
     // Dialog for Notification Policy
     if (showPermissionDialog) {
         AlertDialog(
-            onDismissRequest = { showPermissionDialog = false },
+            onDismissRequest = { onPermissionDialogChange(false) },
             title = { Text("Permiso para Modo No Molestar") },
             text = { Text("Para activar automáticamente el modo No Molestar cuando termine el temporizador, necesitas otorgar permisos en la configuración del sistema.") },
             confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.openNotificationPolicySettings()
-                        showPermissionDialog = false
-                    }
-                ) { Text("Ir a Configuración") }
+                Button(onClick = {
+                    viewModel.openNotificationPolicySettings()
+                    onPermissionDialogChange(false)
+                }) { Text("Ir a Configuración") }
             },
             dismissButton = {
-                TextButton(onClick = { showPermissionDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { onPermissionDialogChange(false) }) { Text("Cancelar") }
             }
         )
-
     }
 }
 
@@ -384,7 +436,7 @@ fun TimerDurationSlider(
             .padding(horizontal = 24.dp)
     ) {
         Text(
-            text = "Duración: $selectedDuration" + if(selectedDuration == 1) " minuto" else " minutos",
+            text = "Duración: $selectedDuration" + if (selectedDuration == 1) " minuto" else " minutos",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -393,9 +445,61 @@ fun TimerDurationSlider(
             onValueChange = { newValue ->
                 onDurationChange(newValue.roundToInt())
             },
-            valueRange = 1f..90f, 
-            steps = 88, 
+            valueRange = 1f..90f,
+            steps = 88,
             modifier = Modifier.padding(top = 8.dp)
         )
+    }
+}
+
+
+
+@Composable
+fun CustomSegmentedTabs(
+    selected: Int,
+    onSelected: (Int) -> Unit
+) {
+    val tabs = listOf("Temporizador", "Alarma")
+    val icons = listOf(Icons.Default.CheckCircle, Icons.Default.Notifications)
+
+
+    Row(
+        Modifier
+            .fillMaxWidth()
+    ) {
+        tabs.forEachIndexed { index, title ->
+            val isSelected = selected == index
+
+
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            if (isSelected) Color(0xFF7B7EB7)
+                            else Color(0xFF2A2D44)
+                        )
+                        .clickable { onSelected(index) }
+                        .padding(vertical = 20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = icons[index],
+                        contentDescription = null,
+                        tint = if (isSelected) Color.White else Color.Gray
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        title,
+                        color = if (isSelected) Color.White else Color.Gray
+                    )
+
+                }
+            }
+            if (index < tabs.lastIndex) {
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+        }
     }
 }
