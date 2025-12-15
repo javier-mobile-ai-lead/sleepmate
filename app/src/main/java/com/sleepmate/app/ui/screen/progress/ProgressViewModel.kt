@@ -6,37 +6,65 @@ import com.sleepmate.domain.datasource.TrackerDataSource
 import com.sleepmate.domain.model.DailySleepProgress
 import com.sleepmate.domain.repository.SleepHabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
 class ProgressViewModel @Inject constructor(
-    private val trackerDataSource: TrackerDataSource,
+    trackerDataSource: TrackerDataSource,
     sleepHabitRepository: SleepHabitRepository
 ) : ViewModel() {
 
-    private val _currentStreak = MutableStateFlow(0)
-    val currentStreak: StateFlow<Int> = _currentStreak.asStateFlow()
+    private val today = LocalDate.now()
+    // Fetch a year of progress to calculate the streak accurately.
+    private val startDate = today.minusYears(1)
 
-    private val _progressByDay = MutableStateFlow<Map<LocalDate, DailySleepProgress>>(emptyMap())
-    val progressByDay: StateFlow<Map<LocalDate, DailySleepProgress>> = _progressByDay.asStateFlow()
+    // A flow that contains all progress data for the last year.
+    private val historicalProgress: StateFlow<Map<LocalDate, DailySleepProgress>> = 
+        trackerDataSource.getProgressForDateRange(startDate, today)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyMap()
+            )
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    // Calculate the current streak based on the historical progress.
+    val currentStreak: StateFlow<Int> = historicalProgress.map { progressMap ->
+        calculateStreak(progressMap)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
+    )
+
+    // The progress for the current week, for the UI.
+    val progressByDay: StateFlow<Map<LocalDate, DailySleepProgress>> = historicalProgress.map { historical ->
+        val startOfWeek = today.with(DayOfWeek.MONDAY)
+        val endOfWeek = today.with(DayOfWeek.SUNDAY)
+        historical.filterKeys { it in startOfWeek..endOfWeek }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyMap()
+    )
+
+    val isLoading: StateFlow<Boolean> = historicalProgress.map { it.isEmpty() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = true
+        )
 
     val weekSummary: StateFlow<WeekSummary> = combine(
-        progressByDay,
+        progressByDay, // Use the derived weekly progress
         sleepHabitRepository.getSleepHabits()
     ) { progressMap, currentHabits ->
-        val today = LocalDate.now()
         val startOfWeek = today.with(DayOfWeek.MONDAY)
         val endOfWeek = today.with(DayOfWeek.SUNDAY)
 
@@ -56,12 +84,12 @@ class ProgressViewModel @Inject constructor(
         }
 
         val totalHabits = currentHabits.size
-        val totalHabitsCompleted = currentHabits.count { it.isCompleted }
+        val habitsCompletedToday = currentHabits.count { it.isCompleted }
 
         WeekSummary(
             completedTimers = completedTimers,
             totalTimers = 7,
-            completedHabits = totalHabitsCompleted,
+            completedHabits = habitsCompletedToday,
             totalHabits = totalHabits,
             daysWithProgress = daysWithProgress
         )
@@ -71,42 +99,33 @@ class ProgressViewModel @Inject constructor(
         initialValue = WeekSummary(0, 7, 0, 0, 0)
     )
 
-    init {
-        loadData()
-    }
+    private fun calculateStreak(progressMap: Map<LocalDate, DailySleepProgress>): Int {
+        var streak = 0
+        var currentDate = LocalDate.now()
 
-    fun refreshData() {
-        loadData()
-    }
+        val todayProgress = progressMap[currentDate]
+        val todayCompleted = todayProgress != null && todayProgress.habits.isNotEmpty() && todayProgress.habits.all { it.isCompleted }
 
-    private fun loadData() {
-        viewModelScope.launch {
-            _isLoading.value = true
+        // If today's habits are not all complete, the streak is calculated up to yesterday.
+        if (!todayCompleted) {
+            currentDate = currentDate.minusDays(1)
+        }
 
-            try {
-                // Load current streak
-                _currentStreak.value = trackerDataSource.getStreakCount()
-
-                // Load current week progress
-                val today = LocalDate.now()
-                val startOfWeek = today.with(DayOfWeek.MONDAY)
-                val endOfWeek = today.with(DayOfWeek.SUNDAY)
-
-                val weekProgress = trackerDataSource.getProgressForDateRange(startOfWeek, endOfWeek)
-                _progressByDay.value = weekProgress
-
-            } catch (e: Exception) {
-                // Handle error
-            } finally {
-                _isLoading.value = false
+        // Now, iterate backwards from `currentDate`
+        while (true) {
+            val dayProgress = progressMap[currentDate]
+            if (dayProgress != null && dayProgress.habits.isNotEmpty() && dayProgress.habits.all { it.isCompleted }) {
+                streak++
+                currentDate = currentDate.minusDays(1)
+            } else {
+                break // Streak is broken
             }
         }
+        return streak
     }
 
     fun getCurrentWeekDates(): List<LocalDate> {
-        val today = LocalDate.now()
         val startOfWeek = today.with(DayOfWeek.MONDAY)
-
         return (0..6).map { startOfWeek.plusDays(it.toLong()) }
     }
 

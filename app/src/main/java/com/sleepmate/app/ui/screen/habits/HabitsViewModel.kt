@@ -32,6 +32,7 @@ class HabitsViewModel @Inject constructor(
 
     init {
         observeHabits()
+        recalculateProgressOnHabitChange()
     }
 
     private fun observeHabits() {
@@ -59,6 +60,26 @@ class HabitsViewModel @Inject constructor(
                     isLoading = false
                 )
             }
+        }
+    }
+
+    private fun recalculateProgressOnHabitChange() {
+        viewModelScope.launch {
+            uiState.map { it.habits }
+                .distinctUntilChanged()
+                .drop(1) // Drop initial empty list
+                .collect { habits ->
+                    try {
+                        val todayProgress = DailySleepProgress(
+                            date = LocalDate.now(),
+                            habits = habits
+                        )
+                        sleepProgressRepository.saveDailyProgress(todayProgress)
+                        Timber.d("Daily progress recalculated due to habit change.")
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to recalculate daily progress")
+                    }
+                }
         }
     }
 
@@ -108,15 +129,6 @@ class HabitsViewModel @Inject constructor(
                 val updatedHabit = habit.copy(isCompleted = !habit.isCompleted)
                 sleepHabitRepository.updateSleepHabit(updatedHabit)
 
-                // Recalculate and save daily progress
-                val allHabits = sleepHabitRepository.getSleepHabits().first()
-                val todayProgress = DailySleepProgress(
-                    date = LocalDate.now(),
-                    habits = allHabits
-                )
-                sleepProgressRepository.saveDailyProgress(todayProgress)
-
-                // Show completion message
                 val message = if (updatedHabit.isCompleted) {
                     "¡Hábito completado!"
                 } else {
@@ -141,15 +153,6 @@ class HabitsViewModel @Inject constructor(
             try {
                 sleepHabitRepository.deleteSleepHabit(habitId)
                 Timber.d("Habit deleted successfully: $habitId")
-
-                // Recalculate and save daily progress after deletion
-                val allHabits = sleepHabitRepository.getSleepHabits().first()
-                val todayProgress = DailySleepProgress(
-                    date = LocalDate.now(),
-                    habits = allHabits
-                )
-                sleepProgressRepository.saveDailyProgress(todayProgress)
-
             } catch (e: Exception) {
                 Timber.e(e, "Failed to delete habit")
                 _uiState.value = _uiState.value.copy(

@@ -57,11 +57,7 @@ fun ProgressScreen(
 
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(lifecycleOwner) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            viewModel.refreshData()
-        }
-    }
+
     val currentStreak by viewModel.currentStreak.collectAsStateWithLifecycle()
     val progressByDay by viewModel.progressByDay.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()

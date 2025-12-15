@@ -3,6 +3,7 @@ package com.sleepmate.data.repository
 import com.sleepmate.data.datasource.local.SleepProgressDataStore
 import com.sleepmate.domain.model.DailySleepProgress
 import com.sleepmate.domain.repository.SleepProgressRepository
+import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,10 +21,10 @@ class SleepProgressRepositoryImpl @Inject constructor(
         sleepProgressDataStore.saveDailyProgress(progress)
     }
     
-    override suspend fun getProgressForDateRange(
+    override fun getProgressForDateRange(
         startDate: LocalDate, 
         endDate: LocalDate
-    ): Map<LocalDate, DailySleepProgress> {
+    ): Flow<Map<LocalDate, DailySleepProgress>> {
         return sleepProgressDataStore.getProgressForDateRange(startDate, endDate)
     }
 }

@@ -12,7 +12,9 @@ import com.sleepmate.domain.model.DailySleepProgress
 import com.sleepmate.domain.model.SleepHabit
 import com.sleepmate.domain.repository.SleepHabitRepository
 import com.sleepmate.domain.repository.SleepProgressRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -46,9 +48,10 @@ class TrackerDataStoreImpl @Inject constructor(
         return sleepHabitRepository.getSleepHabits().first()
     }
 
-    override suspend fun getStreakCount(): Int {
-        val preferences = context.trackerDataStore.data.first()
-        return preferences[STREAK_COUNT_KEY] ?: 0
+    override fun getStreakCount(): Flow<Int> {
+        return context.trackerDataStore.data.map { preferences ->
+            preferences[STREAK_COUNT_KEY] ?: 0
+        }
     }
 
     override suspend fun saveStreakCount(count: Int) {
@@ -78,10 +81,10 @@ class TrackerDataStoreImpl @Inject constructor(
         }
     }
 
-    override suspend fun getProgressForDateRange(
+    override fun getProgressForDateRange(
         startDate: LocalDate,
         endDate: LocalDate
-    ): Map<LocalDate, DailySleepProgress> {
+    ): Flow<Map<LocalDate, DailySleepProgress>> {
         return sleepProgressRepository.getProgressForDateRange(startDate, endDate)
     }
 }

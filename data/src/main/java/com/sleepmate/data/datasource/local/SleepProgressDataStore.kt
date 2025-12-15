@@ -7,9 +7,10 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.sleepmate.domain.model.DailySleepProgress
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -43,30 +44,31 @@ class SleepProgressDataStore @Inject constructor(
         }
     }
     
-    suspend fun getProgressForDateRange(
+    fun getProgressForDateRange(
         startDate: LocalDate, 
         endDate: LocalDate
-    ): Map<LocalDate, DailySleepProgress> {
-        val preferences = context.sleepProgressDataStore.data.first()
-        val progressMap = mutableMapOf<LocalDate, DailySleepProgress>()
-        
-        var currentDate = startDate
-        while (!currentDate.isAfter(endDate)) {
-            val key = stringPreferencesKey("progress_${currentDate.format(dateFormatter)}")
-            val progressJson = preferences[key]
+    ): Flow<Map<LocalDate, DailySleepProgress>> {
+        return context.sleepProgressDataStore.data.map { preferences ->
+            val progressMap = mutableMapOf<LocalDate, DailySleepProgress>()
             
-            if (progressJson != null) {
-                try {
-                    val progress = gson.fromJson(progressJson, DailySleepProgress::class.java)
-                    progressMap[currentDate] = progress
-                } catch (e: Exception) {
-                    // Skip invalid entries
+            var currentDate = startDate
+            while (!currentDate.isAfter(endDate)) {
+                val key = stringPreferencesKey("progress_${currentDate.format(dateFormatter)}")
+                val progressJson = preferences[key]
+                
+                if (progressJson != null) {
+                    try {
+                        val progress = gson.fromJson(progressJson, DailySleepProgress::class.java)
+                        progressMap[currentDate] = progress
+                    } catch (e: Exception) {
+                        // Skip invalid entries
+                    }
                 }
+                
+                currentDate = currentDate.plusDays(1)
             }
             
-            currentDate = currentDate.plusDays(1)
+            progressMap
         }
-        
-        return progressMap
     }
 }

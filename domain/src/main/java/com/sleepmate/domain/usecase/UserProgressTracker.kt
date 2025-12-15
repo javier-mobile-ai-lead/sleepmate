@@ -5,6 +5,7 @@ import com.sleepmate.domain.model.DailySleepProgress
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.first
 
 @Singleton
 class UserProgressTracker @Inject constructor(
@@ -27,7 +28,7 @@ class UserProgressTracker @Inject constructor(
         // Update streak based on yesterday's completion
         if (yesterdayProgress != null && isProgressCompleted(yesterdayProgress)) {
             // User completed everything yesterday, increment streak
-            val currentStreak = trackerDataSource.getStreakCount()
+            val currentStreak = trackerDataSource.getStreakCount().first()
             trackerDataSource.saveStreakCount(currentStreak + 1)
         } else if (yesterdayProgress != null) {
             // Progress exists but not completed, reset streak

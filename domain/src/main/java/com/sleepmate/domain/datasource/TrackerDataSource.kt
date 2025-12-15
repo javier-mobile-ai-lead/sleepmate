@@ -2,6 +2,7 @@ package com.sleepmate.domain.datasource
 
 import com.sleepmate.domain.model.DailySleepProgress
 import com.sleepmate.domain.model.SleepHabit
+import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 interface TrackerDataSource {
@@ -9,12 +10,12 @@ interface TrackerDataSource {
     suspend fun saveDailyProgress(progress: DailySleepProgress)
     suspend fun getDefaultHabits(): List<SleepHabit>
 
-    suspend fun getStreakCount(): Int
+    fun getStreakCount(): Flow<Int>
     suspend fun saveStreakCount(count: Int)
     suspend fun resetStreak()
 
     suspend fun getLastResetDate(): LocalDate?
     suspend fun setLastResetDate(date: LocalDate)
     
-    suspend fun getProgressForDateRange(startDate: LocalDate, endDate: LocalDate): Map<LocalDate, DailySleepProgress>
+    fun getProgressForDateRange(startDate: LocalDate, endDate: LocalDate): Flow<Map<LocalDate, DailySleepProgress>>
 }
