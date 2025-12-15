@@ -43,6 +43,7 @@ fun HabitsScreen(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true  // Evita estado intermedio
     )
+
     
     LaunchedEffect(uiState.completionMessage) {
         uiState.completionMessage?.let { message ->

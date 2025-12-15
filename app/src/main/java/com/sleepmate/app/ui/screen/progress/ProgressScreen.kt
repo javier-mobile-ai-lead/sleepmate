@@ -2,34 +2,53 @@ package com.sleepmate.app.ui.screen.progress
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.sleepmate.app.ui.theme.*
+import androidx.lifecycle.repeatOnLifecycle
 import com.sleepmate.domain.model.DailySleepProgress
 import java.time.LocalDate
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgressScreen(
@@ -37,11 +56,17 @@ fun ProgressScreen(
     onNavigateBack: () -> Unit
 
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.refreshData()
+        }
+    }
     val currentStreak by viewModel.currentStreak.collectAsStateWithLifecycle()
     val progressByDay by viewModel.progressByDay.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val weekSummary by viewModel.weekSummary.collectAsStateWithLifecycle()
     
-    val weekSummary = viewModel.getWeekSummary()
     val weekDates = viewModel.getCurrentWeekDates()
 
 
@@ -59,7 +84,7 @@ fun ProgressScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {onNavigateBack()}) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Atras")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atras")
 
                     }
                 }
@@ -115,7 +140,7 @@ private fun StreakCard(streak: Int) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Primary.copy(alpha = 0.1f)
+            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
         )
     ) {
         Row(
@@ -128,7 +153,7 @@ private fun StreakCard(streak: Int) {
             Icon(
                 imageVector = Icons.Filled.DateRange,
                 contentDescription = null,
-                tint = Primary,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
             )
             
@@ -142,7 +167,7 @@ private fun StreakCard(streak: Int) {
                     text = "$streak días",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Primary
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -206,7 +231,7 @@ private fun DayProgressItem(
         Text(
             text = dayLabel,
             style = MaterialTheme.typography.bodySmall,
-            color = if (isToday) Primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
         
         Box(
@@ -215,14 +240,14 @@ private fun DayProgressItem(
                 .clip(CircleShape)
                 .background(
                     when {
-                        isCompleted -> Primary.copy(alpha = 0.2f)
+                        isCompleted -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                         progress != null -> MaterialTheme.colorScheme.surfaceVariant
                         else -> MaterialTheme.colorScheme.surface
                     }
                 )
                 .border(
                     width = if (isToday) 2.dp else 1.dp,
-                    color = if (isToday) Primary else Color.Transparent,
+                    color = if (isToday) MaterialTheme.colorScheme.primary else Color.Transparent,
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -231,14 +256,14 @@ private fun DayProgressItem(
                 Icon(
                     imageVector = Icons.Filled.Check,
                     contentDescription = "Completado",
-                    tint = Primary,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             } else if (progress?.sleepTimerCompleted == true) {
                 Icon(
                     imageVector = Icons.Filled.Check,
                     contentDescription = "Timer completado",
-                    tint = Primary.copy(alpha = 0.7f),
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                     modifier = Modifier.size(16.dp)
                 )
             } else if (progress != null) {
@@ -329,7 +354,7 @@ private fun SummaryItem(
             CircularProgressIndicator(
                 progress = progress,
                 modifier = Modifier.size(60.dp),
-                color = Primary,
+                color = MaterialTheme.colorScheme.primary,
                 strokeWidth = 6.dp,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
@@ -364,7 +389,7 @@ private fun RecommendationCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Secondary.copy(alpha = 0.1f)
+            containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
         )
     ) {
         Row(
@@ -384,7 +409,7 @@ private fun RecommendationCard() {
                     text = "Consejo del día",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Secondary
+                    color = MaterialTheme.colorScheme.secondary
                 )
                 Text(
                     text = dailyRecommendation,
