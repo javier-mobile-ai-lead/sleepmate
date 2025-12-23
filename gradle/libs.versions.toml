@@ -55,6 +55,9 @@ material3 = "1.2.1"
 # ViewModels
 lifecycleViewModel = "2.9.2"
 
+# AdMob
+playServicesAds = "23.6.0"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -128,6 +131,10 @@ play-services-location = { group = "com.google.android.gms", name = "play-servic
 
 # Google ML Kit Text Recognition
 mlkit-text-recognition = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition", version.ref = "mlkitTextRecognition" }
+
+# AdMob
+play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
@@ -138,4 +145,3 @@ google-services = { id = "com.google.gms.google-services", version = "4.4.2" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "3.0.2" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version = "2.2.0-1.0.27" }
-

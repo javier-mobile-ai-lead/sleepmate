@@ -43,6 +43,12 @@ class MainViewModel @Inject constructor(
         refreshDeviceAdminStatus()
     }
 
+    fun checkNewDay() {
+        viewModelScope.launch {
+            userProgressTracker.trackAndResetIfNeeded()
+        }
+    }
+
     fun setDarkTheme(enabled: Boolean) {
         viewModelScope.launch {
             darkModeUseCase.setDarkModeEnabled(enabled)

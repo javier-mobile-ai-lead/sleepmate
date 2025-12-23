@@ -22,6 +22,7 @@ class SleepHabitsDataStore @Inject constructor(
 ) {
     companion object {
         private val SLEEP_HABITS_KEY = stringPreferencesKey("sleep_habits")
+        private val LAST_RESET_DATE_KEY = stringPreferencesKey("last_habit_reset_date")
     }
     
     fun getSleepHabits(): Flow<List<SleepHabit>> {
@@ -89,4 +90,43 @@ class SleepHabitsDataStore @Inject constructor(
             preferences[SLEEP_HABITS_KEY] = gson.toJson(updatedHabits)
         }
     }
+
+
+    // 2. Función para obtener la última fecha registrada
+    fun getLastResetDate(): Flow<String?> {
+        return context.dataStore.data.map { preferences ->
+            preferences[LAST_RESET_DATE_KEY]
+        }
+    }
+    // 3. Función para guardar la fecha de hoy
+    suspend fun saveLastResetDate(date: String) {
+        context.dataStore.edit { preferences ->
+            preferences[LAST_RESET_DATE_KEY] = date
+
+
+}
+}
+
+// 4. Lógica para desmarcar todos los hábitos (JSON Read -> Modify -> Write)
+suspend fun uncheckAllHabits() {
+    context.dataStore.edit { preferences ->
+        val currentHabitsJson = preferences[SLEEP_HABITS_KEY] ?: "[]"
+        val type = object : TypeToken<List<SleepHabit>>() {}.type
+
+        val currentHabits = try {
+            gson.fromJson<List<SleepHabit>>(currentHabitsJson, type) ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+
+        // Si hay hábitos, creamos una nueva lista con isCompleted = false
+        if (currentHabits.isNotEmpty()) {
+            // Usamos .map para crear copias modificadas
+            val resetHabits = currentHabits.map { habit ->
+                habit.copy(isCompleted = false) // Asumiendo que es un data class
+            }
+            preferences[SLEEP_HABITS_KEY] = gson.toJson(resetHabits)
+        }
+    }
+}
 }

@@ -20,7 +20,8 @@ data class AIHelpUiState(
     val currentMessage: String = "",
     val error: String? = null,
     val usageBlocked: Boolean = false,
-    val blockMessage: String? = null
+    val blockMessage: String? = null,
+    val remainingBonusQueries: Int = 0
 )
 
 @HiltViewModel
@@ -61,12 +62,13 @@ class AIHelpViewModel @Inject constructor(
             try {
                 val installationId = aiUsageRepository.getInstallationId()
                 val hasUsedToday = aiUsageRepository.hasUsedAIToday(installationId)
+                val remainingBonus = _uiState.value.remainingBonusQueries
                 
-                if (hasUsedToday) {
+                if (hasUsedToday && remainingBonus <= 0) {
                     _uiState.value = _uiState.value.copy(
                         usageBlocked = true,
                         canSendMessage = false,
-                        blockMessage = "Ya realizaste tu consulta diaria. Vuelve mañana para hacer una nueva pregunta."
+                        blockMessage = "Ya realizaste tu consulta diaria. ¿Necesitas más ayuda? Mira un video corto para desbloquear 3 consultas adicionales."
                     )
                     Timber.d("Daily usage blocked for installation: $installationId")
                 } else {
@@ -75,7 +77,7 @@ class AIHelpViewModel @Inject constructor(
                         canSendMessage = true,
                         blockMessage = null
                     )
-                    Timber.d("Daily usage available for installation: $installationId")
+                    Timber.d("Daily usage available (or bonus active) for installation: $installationId")
                 }
                 
             } catch (e: Exception) {
@@ -88,6 +90,15 @@ class AIHelpViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun unlockBonusQueries() {
+        _uiState.value = _uiState.value.copy(
+            remainingBonusQueries = 3,
+            usageBlocked = false,
+            canSendMessage = true,
+            blockMessage = null
+        )
     }
     
     fun updateCurrentMessage(message: String) {
@@ -104,7 +115,7 @@ class AIHelpViewModel @Inject constructor(
             return
         }
         
-        if (_uiState.value.usageBlocked) {
+        if (_uiState.value.usageBlocked && _uiState.value.remainingBonusQueries <= 0) {
             _uiState.value = _uiState.value.copy(
                 error = "Ya realizaste tu consulta diaria"
             )
@@ -157,19 +168,44 @@ class AIHelpViewModel @Inject constructor(
                 
                 chatHistoryDataStore.updateMessage(loadingMessageId, aiMessage)
                 
-                // Registramos el uso diario
+                // Registramos el uso diario o consumimos bono
                 val installationId = aiUsageRepository.getInstallationId()
-                aiUsageRepository.recordAIUsage(installationId)
+                val alreadyUsedToday = aiUsageRepository.hasUsedAIToday(installationId)
                 
-                // Bloqueamos futuras consultas
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    usageBlocked = true,
-                    canSendMessage = false,
-                    blockMessage = "Consulta completada. Vuelve mañana para hacer una nueva pregunta."
-                )
+                if (!alreadyUsedToday) {
+                    aiUsageRepository.recordAIUsage(installationId)
+                } else {
+                    // Estamos usando consultas de bono
+                    if (_uiState.value.remainingBonusQueries > 0) {
+                        val newBonus = _uiState.value.remainingBonusQueries - 1
+                        _uiState.value = _uiState.value.copy(remainingBonusQueries = newBonus)
+                    }
+                }
                 
-                Timber.d("Message sent and usage recorded successfully")
+                // Verificamos si debemos bloquear de nuevo
+                // Volvemos a chequear porque recordAIUsage pudo haber cambiado el estado en backend, 
+                // pero aquí nos importa el estado local de bonos también.
+                val remainingBonus = _uiState.value.remainingBonusQueries
+                
+                // Si ya usó la diaria (que ahora sí debería ser true) y no le quedan bonos -> Bloquear
+                if (remainingBonus <= 0) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        usageBlocked = true,
+                        canSendMessage = false,
+                        blockMessage = "Consulta completada. ¿Necesitas más ayuda? Mira un video corto para desbloquear 3 consultas adicionales."
+                    )
+                } else {
+                    // Aún tiene bonos
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        usageBlocked = false,
+                        canSendMessage = true,
+                        blockMessage = null
+                    )
+                }
+                
+                Timber.d("Message sent successfully. Bonus remaining: $remainingBonus")
                 
             } catch (e: Exception) {
                 Timber.e(e, "Error sending message")
@@ -192,7 +228,7 @@ class AIHelpViewModel @Inject constructor(
                 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    canSendMessage = !_uiState.value.usageBlocked,
+                    canSendMessage = !_uiState.value.usageBlocked || _uiState.value.remainingBonusQueries > 0,
                     error = e.message ?: "Error al enviar el mensaje"
                 )
             }

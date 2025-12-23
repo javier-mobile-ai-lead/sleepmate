@@ -16,7 +16,7 @@ class SleepHabitLocalDataSource @Inject constructor(
     suspend fun addSleepHabit(habit: SleepHabit) {
         sleepHabitsDataStore.addHabit(habit)
     }
-    
+
     suspend fun updateSleepHabit(habit: SleepHabit) {
         sleepHabitsDataStore.updateHabit(habit)
     }
@@ -30,5 +30,18 @@ class SleepHabitLocalDataSource @Inject constructor(
         // We need to collect the flow once to get the current state
         // This is a simplified approach - in production you might want to handle this differently
         return null // For now, we'll handle this in the repository layer if needed
+    }
+
+    // Nuevas funciones
+    suspend fun uncheckAllHabits() {
+        sleepHabitsDataStore.uncheckAllHabits()
+    }
+
+    fun getLastResetDate(): Flow<String?> {
+        return sleepHabitsDataStore.getLastResetDate()
+    }
+
+    suspend fun saveLastResetDate(date: String) {
+        sleepHabitsDataStore.saveLastResetDate(date)
     }
 }

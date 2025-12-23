@@ -83,6 +83,10 @@ dependencies {
     implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0")
 
     implementation("com.google.android.gms:play-services-auth:21.1.0")
+    
+    // AdMob
+    implementation(libs.play.services.ads)
+
     // Timber
     implementation(libs.timber)
     

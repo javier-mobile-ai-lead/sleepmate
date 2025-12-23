@@ -89,8 +89,8 @@ object DomainModule {
     @Provides
     @Singleton
     fun provideUserProgressTracker(
-        trackerDataSource: TrackerDataSource
+        trackerDataSource: TrackerDataSource,
+        sleepHabitRepository: SleepHabitRepository // <--- Agrega este parámetro
     ): UserProgressTracker {
-        return UserProgressTracker(trackerDataSource)
-    }
+        return UserProgressTracker(trackerDataSource, sleepHabitRepository)    }
 }

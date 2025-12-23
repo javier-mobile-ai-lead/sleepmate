@@ -1,5 +1,6 @@
 package com.sleepmate.app.ui.screen.aihelp
 
+import android.app.Activity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -14,12 +15,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -27,9 +30,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.rewarded.RewardedAd
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.sleepmate.app.R
 import com.sleepmate.domain.model.ChatMessage
 import kotlinx.coroutines.delay
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +51,81 @@ fun AIHelpScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
     var showClearDialog by remember { mutableStateOf(false) }
+    
+    // AdMob Rewarded Ad
+    val context = LocalContext.current
+    var rewardedAd: RewardedAd? by remember { mutableStateOf(null) }
+    var isAdLoading by remember { mutableStateOf(false) }
+
+    fun loadRewardedAd() {
+        if (isAdLoading) return
+        isAdLoading = true
+        
+        // ID de prueba de Google para Rewarded Ads
+        val adUnitId = "ca-app-pub-3940256099942544/5224354917" 
+        val adRequest = AdRequest.Builder().build()
+        
+        RewardedAd.load(context, adUnitId, adRequest, object : RewardedAdLoadCallback() {
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                Timber.e("AdMob: Error al cargar rewarded ad: ${adError.message}")
+                rewardedAd = null
+                isAdLoading = false
+            }
+
+            override fun onAdLoaded(ad: RewardedAd) {
+                Timber.d("AdMob: Rewarded ad cargado correctamente")
+                rewardedAd = ad
+                isAdLoading = false
+                
+                // Configurar callbacks
+                ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+                    override fun onAdClicked() {
+                        Timber.d("AdMob: Ad clicked")
+                    }
+
+                    override fun onAdDismissedFullScreenContent() {
+                        Timber.d("AdMob: Ad dismissed")
+                        rewardedAd = null
+                        loadRewardedAd() // Pre-cargar el siguiente anuncio
+                    }
+
+                    override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                        Timber.e("AdMob: Error al mostrar ad: ${adError.message}")
+                        rewardedAd = null
+                    }
+
+                    override fun onAdImpression() {
+                        Timber.d("AdMob: Ad impression")
+                    }
+
+                    override fun onAdShowedFullScreenContent() {
+                        Timber.d("AdMob: Ad showed")
+                    }
+                }
+            }
+        })
+    }
+    
+    // Cargar anuncio al iniciar la pantalla si el usuario está bloqueado o cerca del límite
+    LaunchedEffect(Unit) {
+        loadRewardedAd()
+    }
+    
+    fun showRewardedAd() {
+        val activity = context as? Activity
+        if (activity != null && rewardedAd != null) {
+            rewardedAd?.show(activity) { rewardItem ->
+                // El usuario vio el anuncio completo
+                Timber.d("AdMob: Usuario ganó recompensa: ${rewardItem.amount} ${rewardItem.type}")
+                viewModel.unlockBonusQueries()
+            }
+        } else {
+            Timber.e("AdMob: El anuncio no estaba listo o el contexto no es una Activity")
+            if (rewardedAd == null) {
+                loadRewardedAd() // Intentar cargar de nuevo
+            }
+        }
+    }
     
     // Auto-scroll a los mensajes más recientes
     LaunchedEffect(uiState.messages.size) {
@@ -176,18 +261,62 @@ fun AIHelpScreen(
                     Card(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
-                            .padding(16.dp),
+                            .padding(16.dp)
+                            .padding(top = 56.dp), // Ajuste para que no tape el TopBar si está expanded
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        elevation = CardDefaults.cardElevation(4.dp)
                     ) {
-                        Text(
-                            text = uiState.blockMessage.orEmpty(),
-                            modifier = Modifier.padding(16.dp),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Text(
+                                text = uiState.blockMessage.orEmpty(),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center
+                            )
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            Button(
+                                onClick = { showRewardedAd() },
+                                enabled = rewardedAd != null,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                if (rewardedAd == null) {
+                                    if (isAdLoading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(16.dp),
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            strokeWidth = 2.dp
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Cargando anuncio...")
+                                    } else {
+                                        Icon(Icons.Default.PlayArrow, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Reintentar cargar anuncio")
+                                    }
+                                } else {
+                                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Ver video para desbloquear")
+                                }
+                            }
+                            
+                            if (rewardedAd == null && !isAdLoading) {
+                                TextButton(onClick = { loadRewardedAd() }) {
+                                    Text("Reintentar cargar anuncio", fontSize = 10.sp)
+                                }
+                            }
+                        }
                     }
                 }
             }

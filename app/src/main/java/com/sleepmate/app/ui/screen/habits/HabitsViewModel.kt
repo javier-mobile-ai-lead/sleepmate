@@ -18,7 +18,8 @@ data class HabitsUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val showBottomSheet: Boolean = false,
-    val completionMessage: String? = null
+    val completionMessage: String? = null,
+    val showInterstitialAd: Boolean = false // Estado para mostrar el anuncio
 )
 
 @HiltViewModel
@@ -135,7 +136,22 @@ class HabitsViewModel @Inject constructor(
                     "Hábito marcado como incompleto"
                 }
 
-                _uiState.value = _uiState.value.copy(completionMessage = message)
+                // Lógica de "Victoria": Verificar si TODOS los hábitos están completados
+                var showInterstitial = false
+                if (updatedHabit.isCompleted) {
+                    val currentHabits = _uiState.value.habits
+                    // Verificamos si todos los DEMÁS están completados
+                    val allOthersCompleted = currentHabits.none { it.id != habit.id && !it.isCompleted }
+                    if (allOthersCompleted && currentHabits.isNotEmpty()) {
+                        showInterstitial = true
+                        Timber.d("All habits completed! Triggering Interstitial Ad.")
+                    }
+                }
+
+                _uiState.value = _uiState.value.copy(
+                    completionMessage = message,
+                    showInterstitialAd = showInterstitial
+                )
 
                 Timber.d("Habit completion toggled: ${habit.title}")
 
@@ -146,6 +162,10 @@ class HabitsViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun adShown() {
+        _uiState.value = _uiState.value.copy(showInterstitialAd = false)
     }
 
     fun deleteHabit(habitId: String) {

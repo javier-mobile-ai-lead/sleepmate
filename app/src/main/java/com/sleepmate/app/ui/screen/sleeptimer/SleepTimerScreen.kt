@@ -70,6 +70,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.sleepmate.app.ui.component.AdMobBanner
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,6 +122,9 @@ fun SleepTimerScreen(
     }
 
     Scaffold(
+        bottomBar = {
+            AdMobBanner()
+        },
         topBar = {
             TopAppBar(
                 title = {

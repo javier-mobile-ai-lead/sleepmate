@@ -1,16 +1,23 @@
 package com.sleepmate.app.service
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import com.sleepmate.app.MainActivity
 import com.sleepmate.app.R
+import com.sleepmate.app.ui.screen.rest.RestActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -26,48 +33,115 @@ class SleepTimerService : LifecycleService() {
     lateinit var sleepTimerManager: SleepTimerManager
 
     private var serviceJob: Job? = null
+    
+    // Variable para mantener la referencia al receiver dinámico
+    private var unlockReceiver: ScreenUnlockReceiver? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+
+        // 1. Limpieza inicial: Aseguramos que no haya receiver basura registrado
+        disableUnlockReceiver()
 
         serviceJob?.cancel()
         serviceJob = lifecycleScope.launch {
             sleepTimerManager.timerState.collectLatest { state ->
                 if (state is TimerState.Active) {
-                    // Start foreground with an initial notification
-                    startForeground(NOTIFICATION_ID, createNotification(this@SleepTimerService,"Calculating time...", isOngoing = true))
+                    startForeground(NOTIFICATION_ID, createNotification(this@SleepTimerService, "El temporizador está activo", isOngoing = true))
 
-                    // This inner loop will be cancelled by collectLatest when state changes
+                    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
                     while (true) {
                         val remainingMillis = state.endTimeMillis - System.currentTimeMillis()
+
                         if (remainingMillis <= 0) {
-                            // The timer has finished, the Receiver will handle cleanup.
-                            // The state will soon become Inactive, which will stop the service.
+                            // --- MOMENTO FINAL ---
+                            Log.e("SleepMate", ">>> TIEMPO TERMINADO. Iniciando registro del Receiver... <<<")
+
+                            // 2. Activamos el "Espía" (Receiver) DINÁMICAMENTE
+                            enableUnlockReceiver()
+
+                            // 3. Creamos una notificación final simple
+                            val finalNotification = createNotification(
+                                this@SleepTimerService,
+                                "Hora de dormir. Deja el móvil 🌙", 
+                                isOngoing = false
+                            )
+
+                            // 4. La enviamos
+                            notificationManager.notify(NOTIFICATION_FINAL_ID, finalNotification)
+
+                            // Rompemos el ciclo. El servicio sigue vivo (no llamamos stopSelf)
+                            // esperando a que el receiver actúe.
                             break
                         }
+
                         val remainingTime = formatMillisToTime(remainingMillis)
-                        val updatedNotification = createNotification(this@SleepTimerService, "Tiempo restante: $remainingTime", isOngoing = true)
-                        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                        notificationManager.notify(NOTIFICATION_ID, updatedNotification)
-                        delay(1000)
+                        // Actualizar notificación solo si cambia el segundo visible
+                         if (remainingMillis % 1000 < 150) {
+                            val updatedNotification = createNotification(this@SleepTimerService, "Tiempo restante: $remainingTime", isOngoing = true)
+                            notificationManager.notify(NOTIFICATION_ID, updatedNotification)
+                         }
+                        delay(100) // Verificar con más frecuencia para precisión
                     }
-                } else { // Inactive state
+                } else {
+                    Log.d("SleepMate", "Estado inactivo. Deteniendo servicio.")
                     stopSelf()
                 }
             }
         }
-
         return START_STICKY
     }
 
     override fun onDestroy() {
         serviceJob?.cancel()
+        disableUnlockReceiver() // Muy importante desregistrar para evitar fugas de memoria
         super.onDestroy()
+    }
+
+    // --- FUNCIONES ACTUALIZADAS PARA CONTROLAR EL RECEIVER ---
+
+    private fun enableUnlockReceiver() {
+        if (unlockReceiver == null) {
+            try {
+                unlockReceiver = ScreenUnlockReceiver()
+                val filter = IntentFilter(Intent.ACTION_USER_PRESENT)
+                
+                // Registramos dinámicamente usando ContextCompat para compatibilidad con Android 13/14+
+                // RECEIVER_EXPORTED es necesario para recibir broadcasts del sistema (como USER_PRESENT) en API 34+
+                ContextCompat.registerReceiver(
+                    this,
+                    unlockReceiver,
+                    filter,
+                    ContextCompat.RECEIVER_EXPORTED
+                )
+
+                Log.e("SleepMate", ">>> RECEIVER ACTIVADO CORRECTAMENTE: Esperando desbloqueo de pantalla <<<")
+            } catch (e: Exception) {
+                Log.e("SleepMate", "ERROR FATAL al registrar receiver: ${e.message}")
+                e.printStackTrace()
+            }
+        }
+    }
+
+
+    private fun disableUnlockReceiver() {
+        unlockReceiver?.let { receiver ->
+            try {
+                unregisterReceiver(receiver)
+                Log.d("SleepMate", "Receiver de desbloqueo DESACTIVADO")
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        unlockReceiver = null
     }
 
     companion object {
         const val NOTIFICATION_ID = 1988
-        private const val NOTIFICATION_CHANNEL_ID = "sleep_timer_channel"
+        const val NOTIFICATION_FINAL_ID = 1999
+        private const val NOTIFICATION_CHANNEL_ID_ONGOING = "sleep_timer_channel_ongoing"
+        private const val NOTIFICATION_CHANNEL_ID_FINAL = "sleep_timer_channel_final_v6"
 
         fun formatMillisToTime(millis: Long): String {
             val minutes = TimeUnit.MILLISECONDS.toMinutes(millis)
@@ -75,42 +149,94 @@ class SleepTimerService : LifecycleService() {
             return String.format("%02d:%02d", minutes, seconds)
         }
 
-        fun createNotification(context: Context, contentText: String, isOngoing: Boolean): android.app.Notification {
-            createNotificationChannel(context)
+        fun createNotification(context: Context, contentText: String, isOngoing: Boolean): Notification {
+            val channelId = if (isOngoing) NOTIFICATION_CHANNEL_ID_ONGOING else NOTIFICATION_CHANNEL_ID_FINAL
+            createNotificationChannel(context, isOngoing)
 
-            val openAppIntent = Intent(context, MainActivity::class.java).apply {
+            // Intent principal al tocar la notificación (Lleva a MainActivity)
+            val contentIntent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                // Add the destination route as an extra
                 putExtra("destination_route", "sleep_timer_screen")
             }
-            val pendingIntent = PendingIntent.getActivity(
-                context, 0, openAppIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+
+            val contentPendingIntent = PendingIntent.getActivity(
+                context,
+                if (isOngoing) 0 else 1,
+                contentIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
             val title = if (isOngoing) "Temporizador Activo" else "Temporizador Finalizado"
+            val priority = if (isOngoing) NotificationCompat.PRIORITY_LOW else NotificationCompat.PRIORITY_MAX
+            val category = if (isOngoing) NotificationCompat.CATEGORY_SERVICE else NotificationCompat.CATEGORY_ALARM
 
-            return NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+            val builder = NotificationCompat.Builder(context, channelId)
                 .setContentTitle(title)
                 .setContentText(contentText)
-                .setSmallIcon(R.drawable.ic_logo) // Make sure you have this drawable
-                .setContentIntent(pendingIntent)
+                .setSmallIcon(R.drawable.ic_logo)
+                .setContentIntent(contentPendingIntent)
                 .setOnlyAlertOnce(isOngoing)
                 .setOngoing(isOngoing)
                 .setAutoCancel(!isOngoing)
-                .build()
+                .setPriority(priority)
+                .setCategory(category)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+
+            if (!isOngoing) {
+                builder.setDefaults(Notification.DEFAULT_ALL)
+                
+                // --- CAMBIO CLAVE: Full Screen Intent ---
+                // Esto es lo que lanza la actividad automáticamente
+                val fullScreenIntent = Intent(context, RestActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                val fullScreenPendingIntent = PendingIntent.getActivity(
+                    context,
+                    NOTIFICATION_FINAL_ID + 100, // Código de solicitud único
+                    fullScreenIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                builder.setFullScreenIntent(fullScreenPendingIntent, true)
+            }
+
+            return builder.build()
         }
 
-        fun createNotificationChannel(context: Context) {
+        fun createNotificationChannel(context: Context, isOngoing: Boolean) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = NotificationChannel(
-                    NOTIFICATION_CHANNEL_ID,
-                    "Sleep Timer",
-                    NotificationManager.IMPORTANCE_LOW
-                ).apply {
-                    description = "Notification for the active sleep timer"
-                }
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                notificationManager.createNotificationChannel(channel)
+
+                if (isOngoing) {
+                    if (notificationManager.getNotificationChannel(NOTIFICATION_CHANNEL_ID_ONGOING) == null) {
+                        val channel = NotificationChannel(
+                            NOTIFICATION_CHANNEL_ID_ONGOING,
+                            "Sleep Timer Active",
+                            NotificationManager.IMPORTANCE_LOW
+                        )
+                        notificationManager.createNotificationChannel(channel)
+                    }
+                } else {
+                    if (notificationManager.getNotificationChannel(NOTIFICATION_CHANNEL_ID_FINAL) == null) {
+                        val channel = NotificationChannel(
+                            NOTIFICATION_CHANNEL_ID_FINAL,
+                            "Sleep Timer Finished",
+                            NotificationManager.IMPORTANCE_HIGH
+                        ).apply {
+                            description = "Notificación al finalizar el temporizador"
+                            enableVibration(true)
+                            enableLights(true)
+                            setBypassDnd(true)
+                            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+
+                            val audioAttributes = AudioAttributes.Builder()
+                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                .setUsage(AudioAttributes.USAGE_ALARM)
+                                .build()
+                            setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), audioAttributes)
+                        }
+                        notificationManager.createNotificationChannel(channel)
+                    }
+                }
             }
         }
     }

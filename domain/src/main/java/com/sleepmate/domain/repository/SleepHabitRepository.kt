@@ -9,4 +9,8 @@ interface SleepHabitRepository {
     suspend fun updateSleepHabit(habit: SleepHabit)
     suspend fun deleteSleepHabit(habitId: String)
     suspend fun getSleepHabitById(habitId: String): SleepHabit?
+
+    suspend fun uncheckAllHabits()
+    fun getLastResetDate(): Flow<String?>
+    suspend fun saveLastResetDate(date: String)
 }

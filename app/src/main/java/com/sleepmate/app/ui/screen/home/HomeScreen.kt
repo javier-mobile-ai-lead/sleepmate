@@ -41,6 +41,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.sleepmate.app.ui.component.AdMobBanner
 import com.sleepmate.app.ui.theme.BackgroundLight
 import com.sleepmate.app.ui.theme.PrimaryDark
 import com.sleepmate.app.ui.theme.SleepMateTheme
@@ -58,7 +59,11 @@ fun HomeScreen(
 ) {
 
 
-    Scaffold()
+    Scaffold(
+        bottomBar = {
+            AdMobBanner()
+        }
+    )
     { paddingValues ->
         Column(
             modifier = Modifier

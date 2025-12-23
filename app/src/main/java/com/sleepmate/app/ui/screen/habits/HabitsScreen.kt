@@ -1,5 +1,6 @@
 package com.sleepmate.app.ui.screen.habits
 
+import android.app.Activity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -31,6 +33,13 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import com.sleepmate.app.R
 import com.sleepmate.domain.model.SleepHabit
+import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +52,65 @@ fun HabitsScreen(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true  // Evita estado intermedio
     )
+    val context = LocalContext.current
+    var interstitialAd: InterstitialAd? by remember { mutableStateOf(null) }
+
+    // Cargar Interstitial Ad
+    LaunchedEffect(Unit) {
+        val adRequest = AdRequest.Builder().build()
+        // ID de prueba para Interstitial
+        InterstitialAd.load(
+            context,
+            "ca-app-pub-3940256099942544/1033173712",
+            adRequest,
+            object : InterstitialAdLoadCallback() {
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    Timber.d(adError?.toString())
+                    interstitialAd = null
+                }
+
+                override fun onAdLoaded(ad: InterstitialAd) {
+                    Timber.d("Ad was loaded.")
+                    interstitialAd = ad
+                }
+            }
+        )
+    }
+
+    // Mostrar Interstitial Ad cuando el estado lo indique
+    LaunchedEffect(uiState.showInterstitialAd) {
+        if (uiState.showInterstitialAd && interstitialAd != null) {
+            val activity = context as? Activity
+            if (activity != null) {
+                interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+                    override fun onAdDismissedFullScreenContent() {
+                        Timber.d("Ad dismissed fullscreen content.")
+                        interstitialAd = null // Limpiar referencia
+                        viewModel.adShown() // Notificar al ViewModel que se mostró
+                        // Recargar el anuncio para la próxima vez si se desea
+                        // (opcional, dependiendo de la frecuencia deseada)
+                    }
+
+                    override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                        Timber.e("Ad failed to show fullscreen content.")
+                        interstitialAd = null
+                        viewModel.adShown()
+                    }
+
+                    override fun onAdShowedFullScreenContent() {
+                        Timber.d("Ad showed fullscreen content.")
+                        interstitialAd = null
+                    }
+                }
+                interstitialAd?.show(activity)
+            } else {
+                 viewModel.adShown()
+            }
+        } else if (uiState.showInterstitialAd && interstitialAd == null) {
+            // Si debía mostrarse pero no se cargó, limpiamos el flag
+             viewModel.adShown()
+        }
+    }
 
     
     LaunchedEffect(uiState.completionMessage) {

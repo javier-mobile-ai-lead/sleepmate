@@ -10,6 +10,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import com.google.android.gms.ads.MobileAds
 import com.sleepmate.app.ui.navigation.SleepMateNavigation
 import com.sleepmate.app.ui.theme.SleepMateTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,6 +20,9 @@ class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize AdMob
+        MobileAds.initialize(this)
 
         enableEdgeToEdge()
 
@@ -45,6 +49,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+    override fun onStart() {
+        super.onStart()
+        // Esto fuerza la comprobación cada vez que la app se hace visible
+        mainViewModel.checkNewDay()
     }
 }
 

@@ -1,6 +1,7 @@
 package com.sleepmate.domain.usecase;
 
 import com.sleepmate.domain.datasource.TrackerDataSource;
+import com.sleepmate.domain.repository.SleepHabitRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.Provider;
@@ -27,21 +28,27 @@ import javax.annotation.processing.Generated;
 public final class UserProgressTracker_Factory implements Factory<UserProgressTracker> {
   private final Provider<TrackerDataSource> trackerDataSourceProvider;
 
-  private UserProgressTracker_Factory(Provider<TrackerDataSource> trackerDataSourceProvider) {
+  private final Provider<SleepHabitRepository> sleepHabitRepositoryProvider;
+
+  private UserProgressTracker_Factory(Provider<TrackerDataSource> trackerDataSourceProvider,
+      Provider<SleepHabitRepository> sleepHabitRepositoryProvider) {
     this.trackerDataSourceProvider = trackerDataSourceProvider;
+    this.sleepHabitRepositoryProvider = sleepHabitRepositoryProvider;
   }
 
   @Override
   public UserProgressTracker get() {
-    return newInstance(trackerDataSourceProvider.get());
+    return newInstance(trackerDataSourceProvider.get(), sleepHabitRepositoryProvider.get());
   }
 
   public static UserProgressTracker_Factory create(
-      Provider<TrackerDataSource> trackerDataSourceProvider) {
-    return new UserProgressTracker_Factory(trackerDataSourceProvider);
+      Provider<TrackerDataSource> trackerDataSourceProvider,
+      Provider<SleepHabitRepository> sleepHabitRepositoryProvider) {
+    return new UserProgressTracker_Factory(trackerDataSourceProvider, sleepHabitRepositoryProvider);
   }
 
-  public static UserProgressTracker newInstance(TrackerDataSource trackerDataSource) {
-    return new UserProgressTracker(trackerDataSource);
+  public static UserProgressTracker newInstance(TrackerDataSource trackerDataSource,
+      SleepHabitRepository sleepHabitRepository) {
+    return new UserProgressTracker(trackerDataSource, sleepHabitRepository);
   }
 }

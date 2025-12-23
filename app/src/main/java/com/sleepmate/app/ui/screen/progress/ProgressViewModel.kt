@@ -21,13 +21,16 @@ class ProgressViewModel @Inject constructor(
     sleepHabitRepository: SleepHabitRepository
 ) : ViewModel() {
 
-    private val today = LocalDate.now()
+    // CAMBIO 1: Eliminamos 'private val today = LocalDate.now()' porque era estático.
+    // Usamos LocalDate.now() directamente donde se necesite para que sea dinámico.
+
     // Fetch a year of progress to calculate the streak accurately.
-    private val startDate = today.minusYears(1)
+    private val startDate = LocalDate.now().minusYears(1)
 
     // A flow that contains all progress data for the last year.
-    private val historicalProgress: StateFlow<Map<LocalDate, DailySleepProgress>> = 
-        trackerDataSource.getProgressForDateRange(startDate, today)
+    // Usamos LocalDate.now() aquí para el límite inicial de la consulta.
+    private val historicalProgress: StateFlow<Map<LocalDate, DailySleepProgress>> =
+        trackerDataSource.getProgressForDateRange(startDate, LocalDate.now())
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
@@ -45,8 +48,10 @@ class ProgressViewModel @Inject constructor(
 
     // The progress for the current week, for the UI.
     val progressByDay: StateFlow<Map<LocalDate, DailySleepProgress>> = historicalProgress.map { historical ->
-        val startOfWeek = today.with(DayOfWeek.MONDAY)
-        val endOfWeek = today.with(DayOfWeek.SUNDAY)
+        // CAMBIO 2: Obtenemos la fecha fresca dentro del map
+        val currentToday = LocalDate.now()
+        val startOfWeek = currentToday.with(DayOfWeek.MONDAY)
+        val endOfWeek = currentToday.with(DayOfWeek.SUNDAY)
         historical.filterKeys { it in startOfWeek..endOfWeek }
     }.stateIn(
         scope = viewModelScope,
@@ -65,8 +70,10 @@ class ProgressViewModel @Inject constructor(
         progressByDay, // Use the derived weekly progress
         sleepHabitRepository.getSleepHabits()
     ) { progressMap, currentHabits ->
-        val startOfWeek = today.with(DayOfWeek.MONDAY)
-        val endOfWeek = today.with(DayOfWeek.SUNDAY)
+        // CAMBIO 3: Obtenemos la fecha fresca dentro del combine
+        val currentToday = LocalDate.now()
+        val startOfWeek = currentToday.with(DayOfWeek.MONDAY)
+        val endOfWeek = currentToday.with(DayOfWeek.SUNDAY)
 
         var completedTimers = 0
         var daysWithProgress = 0
@@ -76,7 +83,7 @@ class ProgressViewModel @Inject constructor(
             val dayProgress = progressMap[currentDate]
             if (dayProgress != null) {
                 daysWithProgress++
-                if (dayProgress.sleepTimerCompleted) {
+                if (dayProgress.habits.isNotEmpty() && dayProgress.habits.all { it.isCompleted }) {
                     completedTimers++
                 }
             }
@@ -84,6 +91,7 @@ class ProgressViewModel @Inject constructor(
         }
 
         val totalHabits = currentHabits.size
+        // Esto calculará correctamente sobre la lista vacía cuando el repo se actualice
         val habitsCompletedToday = currentHabits.count { it.isCompleted }
 
         WeekSummary(
@@ -101,7 +109,7 @@ class ProgressViewModel @Inject constructor(
 
     private fun calculateStreak(progressMap: Map<LocalDate, DailySleepProgress>): Int {
         var streak = 0
-        var currentDate = LocalDate.now()
+        var currentDate = LocalDate.now() // Esto ya estaba bien, siempre usa la fecha actual
 
         val todayProgress = progressMap[currentDate]
         val todayCompleted = todayProgress != null && todayProgress.habits.isNotEmpty() && todayProgress.habits.all { it.isCompleted }
@@ -125,7 +133,9 @@ class ProgressViewModel @Inject constructor(
     }
 
     fun getCurrentWeekDates(): List<LocalDate> {
-        val startOfWeek = today.with(DayOfWeek.MONDAY)
+        // CAMBIO 4: Usamos LocalDate.now() aquí también
+        val currentToday = LocalDate.now()
+        val startOfWeek = currentToday.with(DayOfWeek.MONDAY)
         return (0..6).map { startOfWeek.plusDays(it.toLong()) }
     }
 
