@@ -1,10 +1,12 @@
 package com.sleepmate.data.repository;
 
 @javax.inject.Singleton()
-@kotlin.Metadata(mv = {2, 2, 0}, k = 1, xi = 48, d1 = {"\u0000\"\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0003\n\u0002\u0018\u0002\n\u0002\b\u0005\n\u0002\u0010\u000e\n\u0002\b\u0006\b\u0007\u0018\u0000 \u00122\u00020\u0001:\u0001\u0012B\u0011\b\u0007\u0012\u0006\u0010\u0002\u001a\u00020\u0003\u00a2\u0006\u0004\b\u0004\u0010\u0005J\u0010\u0010\f\u001a\u0004\u0018\u00010\rH\u0096@\u00a2\u0006\u0002\u0010\u000eJ\u0016\u0010\u000f\u001a\u00020\r2\u0006\u0010\u0010\u001a\u00020\rH\u0096@\u00a2\u0006\u0002\u0010\u0011R\u000e\u0010\u0002\u001a\u00020\u0003X\u0082\u0004\u00a2\u0006\u0002\n\u0000R\u001b\u0010\u0006\u001a\u00020\u00078BX\u0082\u0084\u0002\u00a2\u0006\f\n\u0004\b\n\u0010\u000b\u001a\u0004\b\b\u0010\t\u00a8\u0006\u0013"}, d2 = {"Lcom/sleepmate/data/repository/GPTRepositoryImpl;", "Lcom/sleepmate/domain/repository/GPTRepository;", "remoteConfig", "Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;", "<init>", "(Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;)V", "gptApiService", "Lcom/sleepmate/data/api/GPTApiService;", "getGptApiService", "()Lcom/sleepmate/data/api/GPTApiService;", "gptApiService$delegate", "Lkotlin/Lazy;", "getGPTApiKey", "", "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;", "sendSleepHealthQuery", "userMessage", "(Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;", "Companion", "data_debug"})
+@kotlin.Metadata(mv = {2, 2, 0}, k = 1, xi = 48, d1 = {"\u0000(\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0000\n\u0002\u0018\u0002\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0003\n\u0002\u0018\u0002\n\u0002\b\u0005\n\u0002\u0010\u000e\n\u0002\b\u0006\b\u0007\u0018\u0000 \u00142\u00020\u0001:\u0001\u0014B\u0019\b\u0007\u0012\u0006\u0010\u0002\u001a\u00020\u0003\u0012\u0006\u0010\u0004\u001a\u00020\u0005\u00a2\u0006\u0004\b\u0006\u0010\u0007J\u0010\u0010\u000e\u001a\u0004\u0018\u00010\u000fH\u0096@\u00a2\u0006\u0002\u0010\u0010J\u0016\u0010\u0011\u001a\u00020\u000f2\u0006\u0010\u0012\u001a\u00020\u000fH\u0096@\u00a2\u0006\u0002\u0010\u0013R\u000e\u0010\u0002\u001a\u00020\u0003X\u0082\u0004\u00a2\u0006\u0002\n\u0000R\u000e\u0010\u0004\u001a\u00020\u0005X\u0082\u0004\u00a2\u0006\u0002\n\u0000R\u001b\u0010\b\u001a\u00020\t8BX\u0082\u0084\u0002\u00a2\u0006\f\n\u0004\b\f\u0010\r\u001a\u0004\b\n\u0010\u000b\u00a8\u0006\u0015"}, d2 = {"Lcom/sleepmate/data/repository/GPTRepositoryImpl;", "Lcom/sleepmate/domain/repository/GPTRepository;", "remoteConfig", "Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;", "onboardingPreferences", "Lcom/sleepmate/data/datasource/local/OnboardingPreferences;", "<init>", "(Lcom/google/firebase/remoteconfig/FirebaseRemoteConfig;Lcom/sleepmate/data/datasource/local/OnboardingPreferences;)V", "gptApiService", "Lcom/sleepmate/data/api/GPTApiService;", "getGptApiService", "()Lcom/sleepmate/data/api/GPTApiService;", "gptApiService$delegate", "Lkotlin/Lazy;", "getGPTApiKey", "", "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;", "sendSleepHealthQuery", "userMessage", "(Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;", "Companion", "data_debug"})
 public final class GPTRepositoryImpl implements com.sleepmate.domain.repository.GPTRepository {
     @org.jetbrains.annotations.NotNull()
     private final com.google.firebase.remoteconfig.FirebaseRemoteConfig remoteConfig = null;
+    @org.jetbrains.annotations.NotNull()
+    private final com.sleepmate.data.datasource.local.OnboardingPreferences onboardingPreferences = null;
     @org.jetbrains.annotations.NotNull()
     private static final java.lang.String GPT_API_KEY_CONFIG = "gpt_api_key";
     @org.jetbrains.annotations.NotNull()
@@ -18,7 +20,8 @@ public final class GPTRepositoryImpl implements com.sleepmate.domain.repository.
     
     @javax.inject.Inject()
     public GPTRepositoryImpl(@org.jetbrains.annotations.NotNull()
-    com.google.firebase.remoteconfig.FirebaseRemoteConfig remoteConfig) {
+    com.google.firebase.remoteconfig.FirebaseRemoteConfig remoteConfig, @org.jetbrains.annotations.NotNull()
+    com.sleepmate.data.datasource.local.OnboardingPreferences onboardingPreferences) {
         super();
     }
     

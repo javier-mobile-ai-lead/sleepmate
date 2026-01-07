@@ -71,6 +71,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.sleepmate.app.ui.component.AdMobBanner
+import com.sleepmate.app.util.AnalyticsHelper
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -295,6 +296,7 @@ fun SleepTimerTab(
             } else {
                 FloatingActionButton(
                     onClick = {
+                        AnalyticsHelper.logClick("sleep_timer_button", "SleepTimerScreen") // ¡Mucho más limpio!
                         if (uiState.isTimerActive) {
                             viewModel.cancelSleepTimer()
                         } else {

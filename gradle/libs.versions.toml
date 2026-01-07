@@ -9,6 +9,7 @@ lifecycleRuntimeKtx = "2.9.2"
 activityCompose = "1.10.1"
 
 
+
 # --- NUEVAS VERSIONES ---
 # ML Kit
 mlkitTextRecognition = "19.0.0"
@@ -97,6 +98,7 @@ firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore
 firebase-remoteconfig = { group = "com.google.firebase", name = "firebase-config" }
 firebase-installations = { group = "com.google.firebase", name = "firebase-installations" }
 firebase-config = { group = "com.google.firebase", name = "firebase-config" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 
 # Coroutines
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
+
 }
 
 android {
@@ -78,6 +79,11 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.installations)
     implementation(libs.firebase.config)
+    implementation(libs.firebase.messaging)
+
+    //OneSignal
+    implementation("com.onesignal:OneSignal:[5.1.0, 5.1.99]")
+
     
     // YouTube Player
     implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0")

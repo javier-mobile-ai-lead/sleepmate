@@ -39,6 +39,7 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.sleepmate.app.util.AnalyticsHelper
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -151,7 +152,11 @@ fun HabitsScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = viewModel::showAddHabitBottomSheet,
+                onClick = {
+                    AnalyticsHelper.logClick("add_habit_button", "HabitsScreen")
+
+                    viewModel.showAddHabitBottomSheet()
+                          },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(

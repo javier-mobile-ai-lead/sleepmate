@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sleepmate.app.R
+import com.sleepmate.app.util.AnalyticsHelper
 import com.sleepmate.domain.model.SuggestedHabit
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -249,14 +250,16 @@ fun AddHabitBottomSheet(
                             }
                             
                             Button(
-                                onClick = ::validateAndSave,
+                                onClick = {
+                                    AnalyticsHelper.logClick("save_habit_button", "AddHabitBottomSheet")
+                                    validateAndSave()},
                                 modifier = Modifier.weight(1f),
                                 enabled = customTitle.isNotBlank()
                             ) {
                                 Text(stringResource(R.string.save_habit))
                             }
                         }
-                    }
+                    }   
                 }
             }
         }

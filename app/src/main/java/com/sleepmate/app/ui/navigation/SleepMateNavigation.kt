@@ -2,17 +2,23 @@ package com.sleepmate.app.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.sleepmate.app.MainViewModel
 import com.sleepmate.app.ui.screen.aihelp.AIHelpScreen
 import com.sleepmate.app.ui.screen.habits.HabitsScreen
 import com.sleepmate.app.ui.screen.home.HomeScreen
+import com.sleepmate.app.ui.screen.onboarding.OnboardingScreen
+import com.sleepmate.app.ui.screen.onboarding.SetupProfileScreen
 import com.sleepmate.app.ui.screen.progress.ProgressScreen
 import com.sleepmate.app.ui.screen.settings.SettingsScreen
 import com.sleepmate.app.ui.screen.sleeptimer.SleepTimerScreen
+import com.sleepmate.app.ui.screen.splash.SplashScreen
 import com.sleepmate.app.ui.screen.videorecommendations.VideoRecommendationsScreen
 
 @Composable
@@ -21,6 +27,8 @@ fun SleepMateNavigation(
     // Accept the destination route from MainActivity
     destinationRoute: String?
 ) {
+    val mainViewModel: MainViewModel = hiltViewModel()
+    val onboardingCompleted by mainViewModel.isOnboardingCompleted.collectAsState()
 
     // This effect runs once when the destinationRoute has a value.
     // If the user opens the app normally, it does nothing.
@@ -33,8 +41,44 @@ fun SleepMateNavigation(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route,
+        startDestination = Screen.Splash.route,
     ) {
+        composable(Screen.Splash.route) {
+            SplashScreen(
+                onNavigateToHome = {
+                    if (onboardingCompleted) {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Splash.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Screen.Onboarding.route) {
+                            popUpTo(Screen.Splash.route) { inclusive = true }
+                        }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.Onboarding.route) {
+            OnboardingScreen(
+                onFinish = {
+                    navController.navigate(Screen.SetupProfile.route) {
+                        popUpTo(Screen.Onboarding.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.SetupProfile.route) {
+            SetupProfileScreen(
+                onFinish = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.SetupProfile.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(Screen.Home.route) {
             HomeScreen(
                 onNavigateToSleepTimer = {

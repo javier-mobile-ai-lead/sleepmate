@@ -11,6 +11,7 @@ import com.sleepmate.data.repository.AlarmRepositoryImpl
 import com.sleepmate.data.repository.DarkModeRepositoryImpl
 import com.sleepmate.data.repository.GPTRepositoryImpl
 import com.sleepmate.data.repository.NotificationPushRepositoryImpl
+import com.sleepmate.data.repository.OnboardingRepositoryImpl
 import com.sleepmate.data.repository.SleepHabitRepositoryImpl
 import com.sleepmate.data.repository.SleepProgressRepositoryImpl
 import com.sleepmate.data.repository.SleepTimerRepositoryImpl
@@ -21,6 +22,7 @@ import com.sleepmate.domain.repository.AlarmRepository
 import com.sleepmate.domain.repository.DarkModeRepository
 import com.sleepmate.domain.repository.GPTRepository
 import com.sleepmate.domain.repository.NotificationPushRepository
+import com.sleepmate.domain.repository.OnboardingRepository
 import com.sleepmate.domain.repository.SleepHabitRepository
 import com.sleepmate.domain.repository.SleepProgressRepository
 import com.sleepmate.domain.repository.SleepTimerRepository
@@ -96,6 +98,12 @@ abstract class DataModule {
     abstract fun bindAlarmRepository(
         alarmRepositoryImpl: AlarmRepositoryImpl
     ): AlarmRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindOnboardingRepository(
+        onboardingRepositoryImpl: OnboardingRepositoryImpl
+    ): OnboardingRepository
 }
 
 @Module

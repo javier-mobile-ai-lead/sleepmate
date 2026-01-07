@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sleepmate.app.service.DeviceAdminManager
 import com.sleepmate.domain.usecase.DarkModeUseCase
+import com.sleepmate.domain.usecase.OnboardingUseCase
 import com.sleepmate.domain.usecase.UserProgressTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val darkModeUseCase: DarkModeUseCase,
+    private val onboardingUseCase: OnboardingUseCase,
     private val userProgressTracker: UserProgressTracker,
     private val deviceAdminManager: DeviceAdminManager
 ): ViewModel() {
@@ -26,12 +28,21 @@ class MainViewModel @Inject constructor(
     private val _isDeviceAdminEnabled = MutableStateFlow(false)
     val isDeviceAdminEnabled: StateFlow<Boolean> = _isDeviceAdminEnabled.asStateFlow()
 
+    private val _isOnboardingCompleted = MutableStateFlow(false)
+    val isOnboardingCompleted: StateFlow<Boolean> = _isOnboardingCompleted.asStateFlow()
+
     init {
         viewModelScope.launch {
            // This now expects the use case to return Flow<Boolean?> so we can distinguish
            // between "not set" (null) and "set to light theme" (false).
            darkModeUseCase.isDarkModeEnabled().collect{
                 _isDarkTheme.value = it
+            }
+        }
+
+        viewModelScope.launch {
+            onboardingUseCase.isOnboardingCompleted().collect {
+                _isOnboardingCompleted.value = it
             }
         }
         
@@ -52,6 +63,12 @@ class MainViewModel @Inject constructor(
     fun setDarkTheme(enabled: Boolean) {
         viewModelScope.launch {
             darkModeUseCase.setDarkModeEnabled(enabled)
+        }
+    }
+
+    fun completeOnboarding() {
+        viewModelScope.launch {
+            onboardingUseCase.setOnboardingCompleted(true)
         }
     }
 

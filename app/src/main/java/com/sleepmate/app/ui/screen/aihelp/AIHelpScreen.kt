@@ -37,6 +37,7 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.sleepmate.app.R
+import com.sleepmate.app.util.AnalyticsHelper
 import com.sleepmate.domain.model.ChatMessage
 import kotlinx.coroutines.delay
 import timber.log.Timber
@@ -164,7 +165,9 @@ fun AIHelpScreen(
                 },
                 actions = {
                     if (uiState.messages.isNotEmpty()) {
-                        IconButton(onClick = { showClearDialog = true }) {
+                        IconButton(onClick = {
+                            AnalyticsHelper.logClick("clear_chat_button", "AIHelpScreen")
+                            showClearDialog = true }) {
                             Icon(
                                 Icons.Default.Delete,
                                 contentDescription = stringResource(R.string.clear_chat),
@@ -284,7 +287,9 @@ fun AIHelpScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             
                             Button(
-                                onClick = { showRewardedAd() },
+                                onClick = {
+                                    AnalyticsHelper.logClick("rewarded_ad_button", "AIHelpScreen")
+                                    showRewardedAd() },
                                 enabled = rewardedAd != null,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary
@@ -493,6 +498,7 @@ private fun ChatInputSection(
                             MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                     )
                     .clickable(enabled = !isLoading && canSendMessage && currentMessage.isNotBlank()) {
+                        AnalyticsHelper.logClick("send_message_button", "AIHelpScreen")
                         onSendMessage()
                     },
                 contentAlignment = Alignment.Center

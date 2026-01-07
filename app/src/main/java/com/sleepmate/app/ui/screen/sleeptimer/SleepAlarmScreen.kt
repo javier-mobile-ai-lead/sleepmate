@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sleepmate.app.ui.theme.SleepMateTheme
+import com.sleepmate.app.util.AnalyticsHelper
 import com.sleepmate.domain.model.Alarm
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -130,7 +131,8 @@ private fun formatTriggerTime(triggerTime: Long): String {
         isTomorrow(now, alarmTime) -> "Alarma programada para mañana a las $formattedTime"
         else -> {
             val dayFormat = SimpleDateFormat("EEEE", Locale.forLanguageTag("es-ES"))
-            val formattedDay = dayFormat.format(alarmTime.time).replaceFirstChar { it.titlecase(Locale.getDefault()) }
+            val formattedDay = dayFormat.format(alarmTime.time)
+                .replaceFirstChar { it.titlecase(Locale.getDefault()) }
             "Alarma programada para el $formattedDay a las $formattedTime"
         }
     }
@@ -217,12 +219,21 @@ fun EditAlarmDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onSaveAlarm) {
+            TextButton(
+                onClick =
+                    {
+                        AnalyticsHelper.logClick("save_alarm_button", "SleepAlarmScreen")
+                        onSaveAlarm()
+                    }) {
                 Text("Guardar")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = {
+                AnalyticsHelper.logClick("cancel_alarm_button", "SleepAlarmScreen")
+
+                onDismiss()
+            }) {
                 Text("Cancelar")
             }
         }

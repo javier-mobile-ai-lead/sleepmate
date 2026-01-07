@@ -2,6 +2,7 @@ package com.sleepmate.app.ui.screen.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.onesignal.OneSignal
 import com.sleepmate.domain.usecase.DarkModeUseCase
 import com.sleepmate.domain.usecase.GetEnableNotificationPushUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -62,6 +63,14 @@ class SettingsViewModel @Inject constructor(
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 notificationPushUseCase.setNotificationPushEnabled(enabled)
+
+                // Lógica de OneSignal para activar/desactivar notificaciones
+                if (enabled) {
+                    OneSignal.User.pushSubscription.optIn()
+                } else {
+                    OneSignal.User.pushSubscription.optOut()
+                }
+
                 _uiEvent.send(SettingsUiEvent.NotificationPushChanged(enabled))
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false)

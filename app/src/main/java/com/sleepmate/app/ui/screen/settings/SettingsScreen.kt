@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sleepmate.app.LocalSetDarkTheme
+import com.sleepmate.app.util.AnalyticsHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,6 +91,7 @@ fun SettingsScreen(
                 description = "Cambia entre temas claro y oscuro",
                 isChecked = useDarkTheme,
                 onCheckedChange = {
+                    AnalyticsHelper.logClick("dark_mode_toggle", "SettingsScreen")
                     setDarkTheme(it)
                     viewModel.onDarkModeToggled(it)
                 }
@@ -101,7 +103,14 @@ fun SettingsScreen(
                 title = "Notificaciones Push",
                 description = "Recibe recordatorios y consejos para dormir",
                 isChecked = uiState.isNotificationPushEnabled,
-                onCheckedChange = viewModel::onNotificationPushToggled
+                onCheckedChange = { nuevoValor ->
+                    // 1. Registramos el evento (Igual que hiciste con dark mode)
+                    // Usamos el nombre del elemento "push_notif_toggle" y la pantalla "Settings"
+                    AnalyticsHelper.logClick("push_notif_toggle", "SettingsScreen")
+
+                    // 2. Llamamos al ViewModel para guardar el cambio real
+                    viewModel.onNotificationPushToggled(nuevoValor)
+                }
             )
             Card(
                 modifier = Modifier.fillMaxWidth(),
