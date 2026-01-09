@@ -2,11 +2,12 @@ package com.sleepmate.data.repository
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.sleepmate.data.api.GPTApiService
-import com.sleepmate.data.datasource.local.OnboardingPreferences // <--- IMPORTANTE: Tu paquete correcto
+import com.sleepmate.data.datasource.local.OnboardingPreferences
 import com.sleepmate.data.model.GPTMessage
 import com.sleepmate.data.model.GPTRequest
+import com.sleepmate.domain.repository.DailyHealthMetricsRepository
 import com.sleepmate.domain.repository.GPTRepository
-import kotlinx.coroutines.flow.first // <--- IMPORTANTE: Para leer el Flow una sola vez
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -17,7 +18,8 @@ import javax.inject.Singleton
 @Singleton
 class GPTRepositoryImpl @Inject constructor(
     private val remoteConfig: FirebaseRemoteConfig,
-    private val onboardingPreferences: OnboardingPreferences // <--- 1. INYECTAMOS TU CLASE
+    private val onboardingPreferences: OnboardingPreferences,
+    private val healthMetricsRepository: DailyHealthMetricsRepository
 ) : GPTRepository {
 
     companion object {
@@ -84,27 +86,62 @@ Ejemplos de lo que NO debes responder:
             val apiKey = getGPTApiKey()
                 ?: throw Exception("No se pudo obtener la clave API de GPT")
 
-            // <--- 2. LEEMOS TUS PREFERENCIAS GUARDADAS --->
-            // .first() suspende la corrutina hasta obtener el valor actual del UserProfile
+            // 1. LEEMOS PREFERENCIAS DEL USUARIO
             val userProfile = onboardingPreferences.userProfile.first()
 
-            // <--- 3. CREAMOS EL CONTEXTO DINÁMICO --->
+            // 2. OBTENEMOS DATOS DE SALUD REALES (Últimos 7 días) - FASE 4
+            val recentMetrics = healthMetricsRepository.getRecentMetrics(7).first()
+
+            // 3. CONSTRUIMOS EL INFORME DE SALUD PARA LA IA
+            val healthContext = StringBuilder().apply {
+                append("\n--- INFORME DE SALUD REAL (Últimos 7 días) ---\n")
+                if (recentMetrics.isEmpty()) {
+                    append("No hay datos históricos disponibles todavía.\n")
+                } else {
+                    recentMetrics.forEach { m ->
+                        val hours = m.sleepDurationMinutes / 60
+                        val mins = m.sleepDurationMinutes % 60
+                        append("Fecha: ${m.date} | Sueño: ${hours}h ${mins}min | Pasos: ${m.steps}")
+                        
+                        // Incluimos peso y altura si están disponibles en la métrica diaria
+                        m.weight?.let { append(" | Peso: $it kg") }
+                        m.height?.let { append(" | Altura: $it m") }
+                        
+                        m.avgHeartRate?.let { append(" | FC Media: $it bpm") }
+                        m.hrvRmssd?.let { append(" | HRV: ${it.toInt()}ms") }
+                        
+                        // Identificación del Origen de Datos para la IA
+                        m.sourceApp?.let { append(" | Fuente: $it") }
+                        append("\n")
+                    }
+                }
+            }.toString()
+
             val userName = if (userProfile.name.isNotEmpty()) userProfile.name else "el usuario"
+            val weightStr = userProfile.weight?.let { "$it kg" } ?: "No especificado"
+            val heightStr = userProfile.height?.let { "$it m" } ?: "No especificado"
 
             val userContext = """
                 
                 --- DATOS DEL USUARIO ACTUAL (Contexto para personalizar la respuesta) ---
                 Estás hablando con: $userName.
                 Rango de edad: ${userProfile.ageRange}
+                Peso: $weightStr
+                Altura: $heightStr
                 Nivel de estrés reportado (1-5): ${userProfile.stressLevel}
                 Consumo de estimulantes: ${userProfile.stimulantConsumption}
                 Sus metas principales son: ${userProfile.goals.joinToString(", ")}
                 
+                $healthContext
+                
                 INSTRUCCIÓN DE PERSONALIZACIÓN:
-                Usa los datos de arriba para dar un consejo más cercano y personalizado, pero SIEMPRE respetando las limitaciones médicas y de seguridad definidas al principio.
+                  Usa los datos de perfil (incluyendo peso y altura) y los datos de salud reales para dar un consejo más cercano.
+                 Si ves datos provenientes de apps específicas (como Google Fit, Samsung Health u otros) en el informe de salud, menciona que los has obtenido de allí.
+                 Ten en cuenta su composición física (como el peso y la altura de la fuente sincronizada) si es relevante para el sueño.
+               SIEMPRE respetando las limitaciones médicas y de seguridad definidas al principio.
             """.trimIndent()
 
-            // <--- 4. CONCATENAMOS: REGLAS FIJAS + CONTEXTO DINÁMICO --->
+            // 4. CONCATENAMOS: REGLAS FIJAS + CONTEXTO DINÁMICO
             val finalSystemPrompt = SYSTEM_PROMPT + userContext
 
             // Preparamos los mensajes para GPT
@@ -114,7 +151,7 @@ Ejemplos de lo que NO debes responder:
             )
 
             val request = GPTRequest(
-                model = "gpt-4.1-mini", // <--- CORRECCIÓN: Usar gpt-4o-mini o gpt-3.5-turbo (gpt-4.1 no existe)
+                model = "gpt-4.1-mini",
                 messages = messages,
                 maxTokens = 500,
                 temperature = 0.7
@@ -160,7 +197,6 @@ Ejemplos de lo que NO debes responder:
                     "No pude procesar tu consulta. Intenta nuevamente más tarde."
             }
 
-            throw Exception(errorMessage)
-        }
+            throw Exception("No pude procesar tu consulta. Intenta nuevamente más tarde.")        }
     }
 }

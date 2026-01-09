@@ -15,6 +15,7 @@ import com.sleepmate.app.ui.screen.habits.HabitsScreen
 import com.sleepmate.app.ui.screen.home.HomeScreen
 import com.sleepmate.app.ui.screen.onboarding.OnboardingScreen
 import com.sleepmate.app.ui.screen.onboarding.SetupProfileScreen
+import com.sleepmate.app.ui.screen.onboarding.SetupProfileViewModel
 import com.sleepmate.app.ui.screen.progress.ProgressScreen
 import com.sleepmate.app.ui.screen.settings.SettingsScreen
 import com.sleepmate.app.ui.screen.sleeptimer.SleepTimerScreen
@@ -70,10 +71,15 @@ fun SleepMateNavigation(
         }
 
         composable(Screen.SetupProfile.route) {
+            val setupViewModel: SetupProfileViewModel = hiltViewModel()
             SetupProfileScreen(
+                viewModel = setupViewModel,
                 onFinish = {
                     navController.navigate(Screen.Home.route) {
+                        // Limpia todo el stack para que no pueda volver atrás
+                        // y asegura que el estado de Onboarding se considere cerrado
                         popUpTo(Screen.SetupProfile.route) { inclusive = true }
+                        launchSingleTop = true
                     }
                 }
             )

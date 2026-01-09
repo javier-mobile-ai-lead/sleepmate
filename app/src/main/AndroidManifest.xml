@@ -14,12 +14,31 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
-    <!-- Permission for vibration (optional but recommended for notifications) -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- AdMob -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+
+    <!-- Health Connect permissions -->
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <uses-permission android:name="android.permission.health.WRITE_SLEEP" />
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_EXERCISE" />
+    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION" />
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
+    <uses-permission android:name="android.permission.health.READ_WEIGHT" />
+    <uses-permission android:name="android.permission.health.READ_HEIGHT" />
+    
+    <!-- Physical Activity permission -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+
+    <!-- Queries for Health Connect (essential for Android 11+) -->
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+    </queries>
 
     <application
         android:name=".SleepMateApplication"
@@ -31,8 +50,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SleepMate">
-        
-        <!-- AdMob App ID -->
+
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713"/>
@@ -45,7 +63,6 @@
             android:name="com.onesignal.NotificationAccentColor.DEFAULT"
             android:value="FF8EA1E1" />
 
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -55,7 +72,6 @@
             android:theme="@style/Theme.SleepMate">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -69,7 +85,6 @@
             android:excludeFromRecents="true"
             android:noHistory="true" />
 
-        <!-- UPDATED: Configured exactly like AlarmActivity -->
         <activity
             android:name=".ui.screen.rest.RestActivity"
             android:exported="false"
@@ -79,9 +94,25 @@
             android:excludeFromRecents="true"
             android:noHistory="true"
             android:theme="@style/Theme.SleepMate" />
+        
+        <activity
+            android:name=".ui.screen.healthconnect.HealthConnectRationaleActivity"
+            android:exported="true"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="androidx.health.connect.action.VIEW_PRIVACY_POLICY" />
+            </intent-filter>
 
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
 
-        <!-- Service for managing the ongoing timer notification -->
+        </activity>
+
         <service
             android:name=".service.SleepTimerService"
             android:enabled="true"
@@ -94,15 +125,6 @@
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
 
-<!--        <service-->
-<!--            android:name=".util.FmcService"-->
-<!--            android:exported="false">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="com.google.firebase.MESSAGING_EVENT"/>-->
-<!--            </intent-filter>-->
-<!--        </service>-->
-
-        <!-- BroadcastReceiver for sleep timer alarms -->
         <receiver
             android:name="com.sleepmate.app.service.SleepTimerReceiver"
             android:enabled="true"
@@ -112,13 +134,11 @@
             </intent-filter>
         </receiver>
 
-        <!-- BroadcastReceiver for wake up alarms -->
         <receiver
             android:name="com.sleepmate.app.service.WakeUpAlarmReceiver"
             android:enabled="true"
             android:exported="false" />
 
-        <!-- Device Admin Receiver -->
         <receiver
             android:name=".service.DeviceAdminReceiver"
             android:description="@string/app_name"
@@ -131,6 +151,7 @@
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
         </receiver>
+        
         <receiver
             android:name=".service.ScreenUnlockReceiver"
             android:directBootAware="true"
@@ -141,7 +162,6 @@
                 <action android:name="android.intent.action.USER_PRESENT" />
             </intent-filter>
         </receiver>
-
 
     </application>
 

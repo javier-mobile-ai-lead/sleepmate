@@ -2,6 +2,7 @@ package com.sleepmate.data.repository;
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.sleepmate.data.datasource.local.OnboardingPreferences;
+import com.sleepmate.domain.repository.DailyHealthMetricsRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.Provider;
@@ -30,25 +31,31 @@ public final class GPTRepositoryImpl_Factory implements Factory<GPTRepositoryImp
 
   private final Provider<OnboardingPreferences> onboardingPreferencesProvider;
 
+  private final Provider<DailyHealthMetricsRepository> healthMetricsRepositoryProvider;
+
   private GPTRepositoryImpl_Factory(Provider<FirebaseRemoteConfig> remoteConfigProvider,
-      Provider<OnboardingPreferences> onboardingPreferencesProvider) {
+      Provider<OnboardingPreferences> onboardingPreferencesProvider,
+      Provider<DailyHealthMetricsRepository> healthMetricsRepositoryProvider) {
     this.remoteConfigProvider = remoteConfigProvider;
     this.onboardingPreferencesProvider = onboardingPreferencesProvider;
+    this.healthMetricsRepositoryProvider = healthMetricsRepositoryProvider;
   }
 
   @Override
   public GPTRepositoryImpl get() {
-    return newInstance(remoteConfigProvider.get(), onboardingPreferencesProvider.get());
+    return newInstance(remoteConfigProvider.get(), onboardingPreferencesProvider.get(), healthMetricsRepositoryProvider.get());
   }
 
   public static GPTRepositoryImpl_Factory create(
       Provider<FirebaseRemoteConfig> remoteConfigProvider,
-      Provider<OnboardingPreferences> onboardingPreferencesProvider) {
-    return new GPTRepositoryImpl_Factory(remoteConfigProvider, onboardingPreferencesProvider);
+      Provider<OnboardingPreferences> onboardingPreferencesProvider,
+      Provider<DailyHealthMetricsRepository> healthMetricsRepositoryProvider) {
+    return new GPTRepositoryImpl_Factory(remoteConfigProvider, onboardingPreferencesProvider, healthMetricsRepositoryProvider);
   }
 
   public static GPTRepositoryImpl newInstance(FirebaseRemoteConfig remoteConfig,
-      OnboardingPreferences onboardingPreferences) {
-    return new GPTRepositoryImpl(remoteConfig, onboardingPreferences);
+      OnboardingPreferences onboardingPreferences,
+      DailyHealthMetricsRepository healthMetricsRepository) {
+    return new GPTRepositoryImpl(remoteConfig, onboardingPreferences, healthMetricsRepository);
   }
 }

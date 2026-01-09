@@ -48,6 +48,11 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":data"))
 
+
+    // Add a dependency of Health Connect SDK
+    implementation(libs.health.connect)
+
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -61,6 +66,8 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+    implementation("androidx.hilt:hilt-work:1.2.0")
+    kapt("androidx.hilt:hilt-compiler:1.2.0")
     
     // Navigation
     implementation(libs.navigation.compose)

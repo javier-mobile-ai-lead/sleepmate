@@ -30,7 +30,7 @@ fun OnboardingScreen(
     // Auto-desplazamiento suave
     LaunchedEffect(Unit) {
         while (true) {
-            delay(3000) // Un poco más de tiempo para apreciar la animación
+            delay(2000) // Un poco más de tiempo para apreciar la animación
                 val nextPage = (pagerState.currentPage + 1) % pageCount
                 pagerState.animateScrollToPage(
                     page = nextPage,

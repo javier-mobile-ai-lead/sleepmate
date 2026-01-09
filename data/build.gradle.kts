@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.kapt)
+
 }
 
 android {
@@ -36,7 +37,10 @@ android {
 
 dependencies {
     implementation(project(":domain"))
-    
+
+    // Add a dependency of Health Connect SDK
+    implementation(libs.health.connect)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
@@ -54,6 +58,11 @@ dependencies {
     
     // DataStore
     implementation(libs.datastore.preferences)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
     
     // Timber
     implementation(libs.timber)

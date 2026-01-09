@@ -1,16 +1,16 @@
 -- Merging decision tree log ---
 manifest
-ADDED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest13518099085487296044.xml:2:13-83
-INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest13518099085487296044.xml:2:13-83
+ADDED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest9141282838511670880.xml:2:13-83
+INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest9141282838511670880.xml:2:13-83
 	package
-		INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest13518099085487296044.xml
+		INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest9141282838511670880.xml
 	xmlns:android
-		ADDED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest13518099085487296044.xml:2:23-81
+		ADDED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest9141282838511670880.xml:2:23-81
 uses-sdk
-INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest13518099085487296044.xml reason: use-sdk injection requested
-INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest13518099085487296044.xml
-INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest13518099085487296044.xml
+INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest9141282838511670880.xml reason: use-sdk injection requested
+INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest9141282838511670880.xml
+INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest9141282838511670880.xml
 	android:targetSdkVersion
-		INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest13518099085487296044.xml
+		INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest9141282838511670880.xml
 	android:minSdkVersion
-		INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest13518099085487296044.xml
+		INJECTED from C:\Users\skan_\Desktop\sleepmate-develop\sleepmate-develop\domain\build\intermediates\tmp\ProcessLibraryManifest\debug\tempAndroidManifest9141282838511670880.xml
